@@ -16,6 +16,9 @@ export interface Meter {
   /** Replaces the percentage wherever the meter is read, for a figure that
    *  isn't one — a dollar amount, say. The bar still uses `percent`. */
   display?: string | null;
+  /** What the figure is measured against, so a detail row can read
+   *  "$4.20 of $60 used". Shown only in the panel, never in the pill. */
+  total?: string | null;
   /** Heading the meter sits under in the detail view. */
   group?: string | null;
 }

@@ -245,6 +245,10 @@ a { color: inherit; text-decoration: underline; }
 .menu-item svg, .picker-btn svg { flex: none; }
 
 /* ---- settings ----------------------------------------------------------- */
+/* Unlike the pill and the panel, this is an ordinary window: it has more
+   content than height, so it scrolls. `body` hides overflow for the frameless
+   windows, which would otherwise trap the form. */
+body:has(#settings) { overflow: auto; }
 #settings { padding: 18px 20px 20px; background: var(--color-surface); min-height: 100vh; }
 .field { margin-bottom: 12px; }
 .field label { display: block; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }

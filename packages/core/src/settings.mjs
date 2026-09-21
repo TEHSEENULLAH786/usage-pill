@@ -2,6 +2,17 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+/** The cache holds whole snapshots, whose shape changes between releases, so
+ *  it is stamped and dropped when the version moves on. One extra fetch after
+ *  an upgrade beats rendering yesterday's fields. */
+const CACHE_VERSION = (() => {
+  try {
+    return JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf-8")).version ?? "0";
+  } catch {
+    return "0";
+  }
+})();
+
 /** ~/.config/usage-pill/settings.json, shared by the CLI and the app. */
 export function defaultSettingsPath() {
   const base = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
@@ -52,12 +63,14 @@ export function fileSettings(file = defaultSettingsPath()) {
   };
 }
 
-/** `{ load, save }` for `createHub({ persist })`, backed by a JSON file. */
-export function filePersist(file = defaultCachePath()) {
+/** `{ load, save }` for `createHub({ persist })`, backed by a JSON file.
+ *  A cache written by a different version of the package is ignored. */
+export function filePersist(file = defaultCachePath(), version = CACHE_VERSION) {
   return {
     load() {
       try {
-        return JSON.parse(readFileSync(file, "utf-8"));
+        const { __version, ...state } = JSON.parse(readFileSync(file, "utf-8"));
+        return __version === version ? state : {};
       } catch {
         return {};
       }
@@ -65,7 +78,7 @@ export function filePersist(file = defaultCachePath()) {
     save(state) {
       try {
         mkdirSync(path.dirname(file), { recursive: true });
-        writeFileSync(file, JSON.stringify(state));
+        writeFileSync(file, JSON.stringify({ __version: version, ...state }));
       } catch {
         // A cache that can't be written is only a cache.
       }

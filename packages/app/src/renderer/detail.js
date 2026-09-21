@@ -142,7 +142,7 @@ async function paint() {
         for (const m of g.meters) {
           const box = el("div", "meter");
           const r = el("div", "row");
-          r.append(el("span", null, m.label), el("span", "num secondary", `${m.value} used`));
+          r.append(el("span", null, m.label), el("span", "num secondary", `${m.value}${m.total ? ` of ${m.total}` : ""} used`));
           const track = el("div", "bar-track");
           const bar = el("span", `bar ${m.level}`);
           bar.style.width = `${m.width}%`;

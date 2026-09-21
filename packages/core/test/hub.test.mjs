@@ -131,3 +131,12 @@ test("the menu bar line adds used per-model limits and honours a display overrid
   assert.equal(trayTitle(entries), "25% 44% 70% · $12.34");
   assert.equal(pillText(entries, Date.now()), "claude  session 25%  week 44%  ·  chatgpt  month $12.34");
 });
+
+test("a cache written by another version is ignored", async () => {
+  const { filePersist } = await import("../src/settings.mjs");
+  const file = `${process.env.TMPDIR ?? "/tmp"}/usage-pill-test-${Date.now()}.json`;
+  filePersist(file, "1.0.0").save({ claude: { lastGood: { available: true } } });
+  assert.deepEqual(Object.keys(filePersist(file, "1.0.0").load()), ["claude"], "same version is reused");
+  assert.deepEqual(filePersist(file, "1.1.0").load(), {}, "a different version starts clean");
+  await import("node:fs").then((fs) => fs.rmSync(file, { force: true }));
+});

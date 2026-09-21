@@ -51,7 +51,7 @@ console.log(pillText(entries));
 |-----------|------------------------------------------|---------------------------------------------|
 | `claude`  | a Claude Code login on this machine      | current session and weekly limits, model    |
 | `claude:…`| a login copied when it was current       | the same, for another account                |
-| `ollama`  | `apiKey` setting or `OLLAMA_API_KEY`     | monthly included usage, requests per model  |
+| `ollama`  | `apiKey` setting or `OLLAMA_API_KEY`     | included usage in dollars, requests per model |
 | `chatgpt` | `adminKey` setting or `OPENAI_ADMIN_KEY` | API spend this month against a budget       |
 
 `providers()` is a function, not an array: Claude contributes one provider per
@@ -96,6 +96,11 @@ writes somewhere else. Types are in `index.d.ts`.
   uses, called with the login in the macOS Keychain
   (`~/.claude/.credentials.json` elsewhere). The first read may show a macOS
   Keychain prompt. The token is used for that one request and never stored.
-- Ollama: `ollama.com/api/usage` with your API key.
+- Ollama: `ollama.com/api/usage` with your API key. That endpoint returns
+  only the share of the monthly included usage, rounded to two decimals, so
+  the dollars are worked out from it (Pro includes $60) and can sit a few
+  cents from ollama.com. It reports no reset date either, so the countdown
+  runs to the day of the month the account was created; `resetDay` overrides
+  it.
 
 Both are undocumented by their owners and may change.

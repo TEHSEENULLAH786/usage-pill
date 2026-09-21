@@ -103,6 +103,7 @@ function viewModel(list, now = Date.now()) {
       g.meters.push({
         label: m.label,
         value: meterText(m),
+        total: m.total ?? null,
         width: Math.min(100, Math.max(0, m.percent)),
         level: level(m),
         resetLabel: resetLabel(m.resetsAt, now),
@@ -125,6 +126,7 @@ function viewModel(list, now = Date.now()) {
       headline: top.map((m) => ({
         short: m.short,
         value: meterText(m),
+        total: m.total ?? null,
         width: Math.min(100, Math.max(0, m.percent)),
         level: level(m),
         title: `${m.label} · ${resetLabel(m.resetsAt, now)}`,
@@ -274,11 +276,16 @@ function positionDetail() {
 
 function openPrefs() {
   if (prefsWindow && !prefsWindow.isDestroyed()) return prefsWindow.focus();
+  // Taller than the screen allows is no use, and the form grows with every
+  // provider, so this one resizes and scrolls.
+  const area = screen.getPrimaryDisplay().workAreaSize;
   prefsWindow = new BrowserWindow({
     width: 460,
-    height: 640,
+    height: Math.min(760, area.height - 80),
+    minWidth: 420,
+    minHeight: 360,
     title: "Usage Pill Settings",
-    resizable: false,
+    resizable: true,
     minimizable: false,
     maximizable: false,
     fullscreenable: false,
