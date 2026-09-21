@@ -1,11 +1,15 @@
 {
   "name": "usage-pill-monorepo",
   "private": true,
-  "workspaces": ["packages/core", "packages/app"],
+  "workspaces": [
+    "packages/core",
+    "packages/app"
+  ],
   "scripts": {
     "start": "npm start -w usage-pill",
     "cli": "node packages/core/bin/usage-pill-cli.mjs",
     "test": "node --test packages/core/test/*.test.mjs",
-    "dist": "npm run dist -w usage-pill"
+    "dist": "npm run dist -w usage-pill",
+    "release": "node scripts/release.mjs"
   }
 }

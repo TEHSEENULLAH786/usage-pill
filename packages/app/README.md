@@ -28,7 +28,8 @@ Settings live in `~/.config/usage-pill/settings.json`, shared with the CLI.
 ## Build a .dmg
 
 ```sh
-npm run dist
+npm run dist      # from the repo root: Apple Silicon and Intel
+npm run release   # attach both to a GitHub Release
 ```
 
 See the repository README for signing.

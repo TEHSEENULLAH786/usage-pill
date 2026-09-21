@@ -6,7 +6,7 @@ weekly limits (every account you sign into), Ollama Cloud's month, and any
 provider you add.
 
 ```
-claude  Fable 1M  session 25%  week 39%  ↻ 3h 18m  ·  ollama  month 6.2%  ↻ 9d
+claude  Opus 1M  session 16%  week 45%  ↻ 34m  ·  ollama  pro  month $4.20  ↻ 14d
 ```
 
 Two packages, one codebase:
@@ -100,15 +100,24 @@ menu, settings form and CLI all render it without further code. See
 
 ## Ship it
 
+The admin console's Deploy page has a **Usage Pill Mac app** task that runs
+the release below end to end. By hand:
+
 ```sh
 # npm: the core + CLI, then the app (needs `electron` as a peer dependency)
 cd packages/core && npm publish
 cd packages/app  && npm publish
 npx usage-pill                # anyone with Node gets the menu bar app
 
-# macOS .dmg for everyone else
-npm run dist                  # packages/app/dist/Usage Pill-*.dmg
+# macOS .dmg for everyone else: Apple Silicon and Intel
+npm run dist                  # packages/app/dist/Usage Pill-<version>-{arm64,x64}.dmg
+npm run release               # attaches both to a GitHub Release for this version
+npm run release -- --dry-run  # check what it would publish, and that the login works
 ```
+
+`npm run release` re-runs safely: the same version updates its release and
+replaces the installers. It refuses if commits are unpushed, since the release
+would point at code nobody else has.
 
 The dmg is unsigned until you add an Apple Developer identity to
 `packages/app/electron-builder.yml`; unsigned builds open with right-click →

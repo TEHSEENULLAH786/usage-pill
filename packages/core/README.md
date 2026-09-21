@@ -1,11 +1,12 @@
 # usage-pill-core
 
-Your AI plan usage as one small line: Claude Code's session and weekly limits,
-Ollama Cloud's monthly usage, and whatever provider you add next.
+Your AI plan usage as one small line: Claude Code's session and weekly limits
+for every account you sign into, Ollama Cloud's included usage in dollars, and
+whatever provider you add next.
 
 ```
 $ npx usage-pill-cli
-claude  Fable 1M  session 25%  week 39%  ↻ 3h 18m  ·  ollama  month 6.2%  ↻ 9d
+claude  Opus 1M  session 16%  week 45%  ↻ 34m  ·  ollama  pro  month $4.20  ↻ 14d
 ```
 
 The desktop pill and menu bar app that renders the same numbers is
@@ -40,6 +41,7 @@ Numbers are cached in `~/.cache/usage-pill/cache.json` (3 min for Claude,
 ```js
 import { createHub, fileSettings, filePersist, providers, pillText } from "usage-pill-core";
 
+// `providers` is a function, so a Claude account added later just appears.
 const hub = createHub({ providers, settings: fileSettings(), persist: filePersist() });
 const entries = await hub.getAll();        // [{ provider, snapshot }]
 console.log(pillText(entries));
@@ -71,10 +73,12 @@ A provider is a plain object. Return a `Snapshot`; the hub does caching,
 back-off and "last good values while stale" for you.
 
 ```js
-export const chatgpt = {
-  id: "chatgpt",
-  label: "ChatGPT",
+export const gemini = {
+  id: "gemini",
+  label: "Gemini",
   ttlMs: 5 * 60_000,
+  // Stay off until there is a key, so a fresh install isn't full of dead chips.
+  enabledByDefault: (settings) => !!settings.apiKey,
   settings: [{ key: "apiKey", label: "API key", type: "password" }],
   async fetch({ settings }) {
     if (!settings.apiKey) return { available: false, reason: "Add an API key in Settings." };
@@ -82,7 +86,18 @@ export const chatgpt = {
     return {
       available: true,
       badge: data.plan,
-      meters: [{ id: "month", label: "Monthly usage", short: "month", percent: data.percent, resetsAt: data.resetsAt, headline: true }],
+      meters: [
+        {
+          id: "month",
+          label: "Monthly usage",
+          short: "month",
+          percent: data.percent,        // drives the bar and the ring
+          display: data.dollars,        // optional: shown instead of the percentage
+          total: data.allowance,        // optional: the panel reads "$4 of $60 used"
+          resetsAt: data.resetsAt,
+          headline: true,               // in the pill; `tray: true` is menu bar only
+        },
+      ],
     };
   },
 };
@@ -98,7 +113,10 @@ writes somewhere else. Types are in `index.d.ts`.
 - Claude: `api.anthropic.com/api/oauth/usage`, the endpoint Claude Code itself
   uses, called with the login in the macOS Keychain
   (`~/.claude/.credentials.json` elsewhere). The first read may show a macOS
-  Keychain prompt. The token is used for that one request and never stored.
+  Keychain prompt. Claude Code holds one login at a time, so each run copies
+  the current one — token to the Keychain under `usage-pill-claude`, name to
+  `~/.config/usage-pill/accounts.json` — and every account keeps its own chip.
+  Nothing here signs anybody in, and a copy stops working when it expires.
 - Ollama: `ollama.com/api/usage` with your API key. That endpoint returns
   only the share of the monthly included usage, rounded to two decimals, so
   the dollars are worked out from it (Pro includes $60) and can sit a few
