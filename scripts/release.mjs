@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const DIST = path.join(ROOT, "packages", "app", "dist");
+const DIST = path.join(ROOT, "dist");
 
 const run = (cmd, args, input) =>
   new Promise((resolve, reject) => {
@@ -73,7 +73,7 @@ async function api(slug, method, pathname, auth, body) {
   return { ok: res.ok, status: res.status, data, text };
 }
 
-const version = JSON.parse(readFileSync(path.join(ROOT, "packages", "app", "package.json"), "utf-8")).version;
+const version = JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf-8")).version;
 const tag = `v${version}`;
 
 const installers = (() => {

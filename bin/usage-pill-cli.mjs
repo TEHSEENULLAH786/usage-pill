@@ -12,7 +12,7 @@ import {
   trayTitle,
   updatedLabel,
   watchResets,
-} from "../src/index.mjs";
+} from "../src/core/index.mjs";
 
 const args = process.argv.slice(2);
 const has = (flag) => args.includes(flag);

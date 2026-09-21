@@ -2,31 +2,168 @@
 
 A small pill that floats anywhere on your desktop, plus a menu bar item,
 showing how much of your AI plans you've used: Claude Code's session and
-weekly limits (every account you sign into), Ollama Cloud's month, and any
-provider you add.
+weekly limits for every account you sign into, Ollama Cloud's included usage
+in dollars, and any provider you add.
 
 ```
 claude  Opus 1M  session 16%  week 45%  ↻ 34m  ·  ollama  pro  month $4.20  ↻ 14d
 ```
 
-Two packages, one codebase:
-
-| package                              | what                                                   |
-|--------------------------------------|--------------------------------------------------------|
-| [`packages/core`](packages/core)     | `usage-pill-core` on npm: the providers, the hub, the CLI (`usage-pill-cli`) |
-| [`packages/app`](packages/app)       | `usage-pill` on npm: the Electron menu bar app with the floating pill |
-
 ## Install
 
-- **Mac app:** download the `.dmg` from the [latest release](https://github.com/TEHSEENULLAH786/usage-pill/releases/latest)
-  and drag Usage Pill to Applications. It isn't notarized yet, so right-click
-  and choose Open on the first launch.
-- **From npm:** `npx usage-pill` runs the same app; `npx usage-pill-cli`
+- **Mac app:** download the `.dmg` for your Mac from the
+  [latest release](https://github.com/TEHSEENULLAH786/usage-pill/releases/latest)
+  (`arm64` for Apple Silicon, `x64` for Intel) and drag Usage Pill to
+  Applications. It isn't notarized yet, so right-click and choose Open on the
+  first launch.
+- **With Node:** `npx usage-pill` runs the same app, `npx usage-pill-cli`
   prints the numbers in a terminal.
-- **In Claude Code:** see [packages/core/README.md](packages/core/README.md#cli)
-  for the status line one-liner.
 
-## Run it from source
+Claude needs no setup beyond being signed in to Claude Code on that Mac.
+macOS asks once to allow reading that login from the Keychain.
+
+## Using it
+
+The pill drags anywhere and stays on top, across Spaces and over full-screen
+apps. Click it for the detail panel: bars, reset times, the Claude Code model
+picker, appearance, per-model Ollama requests, and Quit. The **×** at the end
+of the pill quits everything.
+
+The menu bar item shows the headline percentages, plus a per-model weekly
+limit such as Fable once it has been used, and holds the menu: show/hide the
+pill, providers on/off, the Claude Code model, Appearance, Settings, launch at
+login, quit.
+
+**Appearance**, in the panel's dropdown and the menu bar's Appearance menu:
+theme (match system, light, dark) and pill style (numbers, or a circle per
+figure).
+
+Settings live in `~/.config/usage-pill/settings.json`, shared with the CLI.
+
+### Quit and uninstall
+
+Quit from the **×** on the pill, the **Quit** button in the panel, or the menu
+bar item. Any of the three closes the pill and the menu bar item together.
+**Hide pill** keeps the menu bar item and removes the floating pill.
+
+```sh
+rm -rf ~/.config/usage-pill ~/.cache/usage-pill   # settings and cache
+npm uninstall -g usage-pill                       # only if installed globally
+```
+
+Drag the app out of Applications to finish. If "Launch at login" was on, turn
+it off first, or remove it under System Settings → General → Login Items.
+
+## The CLI
+
+```
+usage-pill-cli                 print the pill
+usage-pill-cli --json          the same as JSON
+usage-pill-cli --tray          the short menu bar form (25% 44% 70%)
+usage-pill-cli --refresh       skip the cache
+usage-pill-cli --watch 60      reprint every minute, notify when a used limit resets
+usage-pill-cli --provider claude
+usage-pill-cli --set ollama.apiKey=…
+usage-pill-cli --disable ollama
+usage-pill-cli --accounts      Claude accounts known on this machine
+usage-pill-cli --forget <uuid> drop a saved Claude account
+```
+
+As a Claude Code status line, in `~/.claude/settings.json`:
+
+```json
+{ "statusLine": { "type": "command", "command": "usage-pill-cli --provider claude" } }
+```
+
+Numbers are cached in `~/.cache/usage-pill/cache.json` (3 min for Claude,
+5 min for Ollama) so a status line that runs often doesn't hit the services.
+
+## Providers
+
+| provider | needs | on by default | reports |
+|---|---|---|---|
+| Claude | a Claude Code login on this machine | yes | session and weekly limits, model |
+| Ollama | an API key from ollama.com → Settings → Keys | once a key is entered | included usage in dollars, requests per model |
+
+A provider that needs a key stays off until it has one, so a fresh install
+shows only Claude. Enter keys in the app's Settings, or with
+`usage-pill-cli --set ollama.apiKey=…`.
+
+**More than one Claude account.** Claude Code holds one login at a time. Each
+time it runs, Usage Pill copies that login — the token into the Keychain, the
+name into `~/.config/usage-pill/accounts.json` — so an account keeps its own
+chip after you sign Claude Code into a different one. Nothing here signs
+anybody in: every token was made by Claude Code itself. A copy stops updating
+when it expires; sign Claude Code into that account once to refresh it.
+`usage-pill-cli --accounts` lists them, `--forget <uuid>` drops one, and
+Settings has a Forget button.
+
+**No ChatGPT chip yet.** The Usage page in ChatGPT's own settings is served to
+a logged-in browser session, not to the public API, so showing it needs an
+OpenAI login stored on the machine the way Claude Code stores one. An OpenAI
+API-spend provider exists in `src/core/providers/chatgpt.mjs` but is left out
+of the shipped list, because spend is not the plan allowance the name
+suggests.
+
+### Writing one
+
+A provider is a plain object. Return a `Snapshot`; the hub does caching,
+back-off and "last good values while stale" for you. Drop the file in
+`src/core/providers/` and add it to `providers()` in `src/core/index.mjs`. The
+pill, panel, menu bar, settings form and CLI all render it with no further
+code.
+
+```js
+export const gemini = {
+  id: "gemini",
+  label: "Gemini",
+  ttlMs: 5 * 60_000,
+  // Stay off until there is a key, so a fresh install isn't full of dead chips.
+  enabledByDefault: (settings) => !!settings.apiKey,
+  settings: [{ key: "apiKey", label: "API key", type: "password" }],
+  async fetch({ settings }) {
+    if (!settings.apiKey) return { available: false, reason: "Add an API key in Settings." };
+    const data = await fetchSomething(settings.apiKey);
+    return {
+      available: true,
+      badge: data.plan,
+      meters: [
+        {
+          id: "month",
+          label: "Monthly usage",
+          short: "month",
+          percent: data.percent,        // drives the bar and the ring
+          display: data.dollars,        // optional: shown instead of the percentage
+          total: data.allowance,        // optional: the panel reads "$4 of $60 used"
+          resetsAt: data.resetsAt,
+          headline: true,               // in the pill; `tray: true` is menu bar only
+        },
+      ],
+    };
+  },
+};
+```
+
+Throw `new RateLimited(message, retryAfterMs)` when the service says to slow
+down. `settings` fields build the app's Settings form automatically; `options`
+(see the Claude provider's model picker) are choices the provider writes
+somewhere else. Types are in `index.d.ts`.
+
+## As a library
+
+The same package is importable, so another tool can render the numbers its own
+way.
+
+```js
+import { createHub, fileSettings, filePersist, providers, pillText } from "usage-pill";
+
+// `providers` is a function, so a Claude account added later just appears.
+const hub = createHub({ providers, settings: fileSettings(), persist: filePersist() });
+const entries = await hub.getAll();        // [{ provider, snapshot }]
+console.log(pillText(entries));
+```
+
+## Working on it
 
 ```sh
 npm install
@@ -35,100 +172,50 @@ npm run cli          # the same numbers as one line of text
 npm test
 ```
 
-The pill drags anywhere and stays on top, across Spaces and over full-screen
-apps. Click it for the detail panel (bars, reset times, the Claude Code model
-picker, appearance, per-model Ollama requests); the × on the pill quits
-everything. The menu bar item shows the headline percentages, including a
-per-model weekly limit such as Fable once it has been used, and holds the
-menu: show/hide the pill, providers on/off, appearance, settings, launch at
-login.
-
-**Appearance** lives in the panel's dropdown and the menu bar's Appearance
-menu: theme (match system / light / dark) and pill style (numbers, or a
-circle per figure).
-
-Settings are one file shared by the app and the CLI:
-`~/.config/usage-pill/settings.json`.
-
-## Quit and uninstall
-
-Quit it from the **×** at the end of the pill, the **Quit** button in the
-detail panel, or the menu bar item (**Quit Usage Pill**). Any of the three
-closes the pill and the menu bar item together. **Hide pill** keeps the menu
-bar item and removes the floating pill.
-
-Nothing is installed system-wide. To remove every trace:
-
-```sh
-rm -rf ~/.config/usage-pill ~/.cache/usage-pill   # settings and cache
-npm uninstall -g usage-pill usage-pill-core       # only if installed globally
+```
+src/main.mjs         Electron main process: windows, tray, IPC
+src/preload.cjs      the only bridge the windows get
+src/renderer/        pill, detail panel, settings window
+src/core/            providers, hub, formatters, settings — no Electron
+bin/                 usage-pill (launches the app), usage-pill-cli
 ```
 
-If "Launch at login" was on, turn it off in the menu first (or under System
-Settings → General → Login Items).
+`src/core` has no Electron in it, which is why the tests run in milliseconds
+and why the CLI stays light.
 
-## Providers
+## Shipping a release
 
-| provider | needs | on by default |
-|---|---|---|
-| Claude | a Claude Code login on this machine | yes |
-| Ollama | an API key from ollama.com → Settings → Keys | once a key is entered |
-
-A provider that needs a key stays off until it has one, so a fresh install
-shows only Claude. Enter keys in the app's Settings, or with
-`usage-pill-cli --set ollama.apiKey=…`.
-
-**More than one Claude account.** Claude Code holds one login at a time.
-Each time it runs, Usage Pill copies that login — the token into the
-Keychain, the name into `~/.config/usage-pill/accounts.json` — so an account
-keeps its own chip after you sign Claude Code into a different one. Nothing
-here signs anybody in: every token was made by Claude Code itself. A copy
-stops updating when it expires; sign Claude Code into that account once to
-refresh it. `usage-pill-cli --accounts` lists them, `--forget <uuid>` drops
-one, and Settings has a Forget button.
-
-**No ChatGPT chip yet.** The Usage page in ChatGPT's own settings is served
-to a logged-in browser session, not to the public API, so showing it needs an
-OpenAI login stored on the machine the way Claude Code stores one. An OpenAI
-API-spend provider exists in the source but is left out of the shipped list,
-because spend is not the plan allowance the name suggests.
-
-Adding another (Gemini, Cursor, a company dashboard…) is a single file in
-`packages/core/src/providers/` that returns a `Snapshot`; the pill, panel,
-menu, settings form and CLI all render it without further code. See
-[packages/core/README.md](packages/core/README.md#writing-one).
-
-## Ship it
-
-The admin console's Deploy page has a **Usage Pill Mac app** task that runs
-the release below end to end. By hand:
+The admin console's Deploy page has a **Usage Pill Mac app** task that runs all
+of this. By hand:
 
 ```sh
-# npm: the core + CLI, then the app (needs `electron` as a peer dependency)
-cd packages/core && npm publish
-cd packages/app  && npm publish
-npx usage-pill                # anyone with Node gets the menu bar app
-
-# macOS .dmg for everyone else: Apple Silicon and Intel
-npm run dist                  # packages/app/dist/Usage Pill-<version>-{arm64,x64}.dmg
+npm run dist                  # dist/Usage Pill-<version>-{arm64,x64}.dmg
 npm run release               # attaches both to a GitHub Release for this version
 npm run release -- --dry-run  # check what it would publish, and that the login works
+npm publish                   # optional: the npx route
 ```
 
 `npm run release` re-runs safely: the same version updates its release and
-replaces the installers. It refuses if commits are unpushed, since the release
-would point at code nobody else has.
+replaces the installers. It refuses while commits are unpushed, since the
+release would point at code nobody else has.
 
 The dmg is unsigned until you add an Apple Developer identity to
-`packages/app/electron-builder.yml`; unsigned builds open with right-click →
-Open, or through a Homebrew cask.
+`electron-builder.yml`; unsigned builds open with right-click → Open, or
+through a Homebrew cask.
 
 ## How it reads the numbers
 
-- Claude: the endpoint Claude Code itself calls (`api.anthropic.com/api/oauth/usage`),
-  with the login stored in the macOS Keychain. macOS may ask once to allow
-  the read. The token is never stored or sent anywhere else.
-- Ollama: `ollama.com/api/usage` with your API key.
+- **Claude:** `api.anthropic.com/api/oauth/usage`, the endpoint Claude Code
+  itself calls, with the login in the macOS Keychain
+  (`~/.claude/.credentials.json` elsewhere). The token is used for that one
+  request and never sent anywhere else.
+- **Ollama:** `ollama.com/api/usage` with your API key. That endpoint returns
+  only the share of the monthly included usage, rounded to two decimals, so
+  the dollars are worked out from it (Pro includes $60) and can sit a few
+  cents from ollama.com. It reports no reset date either, so the countdown
+  runs to the day of the month the account was created; `resetDay` overrides
+  it.
 
-Both endpoints are undocumented by their owners. When a service refuses a
-check, the last good numbers stay on screen with a "not current" note.
+Both endpoints are undocumented by their owners and may change. When a service
+refuses a check, the last good numbers stay on screen with a "not current"
+note.

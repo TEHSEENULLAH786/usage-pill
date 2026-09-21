@@ -7,7 +7,7 @@ import path from "node:path";
  *  an upgrade beats rendering yesterday's fields. */
 const CACHE_VERSION = (() => {
   try {
-    return JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf-8")).version ?? "0";
+    return JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf-8")).version ?? "0";
   } catch {
     return "0";
   }

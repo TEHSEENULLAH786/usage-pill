@@ -17,7 +17,7 @@ import {
   trayTitle,
   updatedLabel,
   watchResets,
-} from "usage-pill-core";
+} from "./core/index.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const renderer = (file) => path.join(here, "renderer", file);

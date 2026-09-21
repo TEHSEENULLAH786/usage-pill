@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createHub, RateLimited, pillText, trayTitle, shortReset } from "../src/index.mjs";
+import { createHub, RateLimited, pillText, trayTitle, shortReset } from "../src/core/index.mjs";
 
 const memSettings = (data = {}) => ({ get: (id) => data[id] ?? {}, set: (id, patch) => (data[id] = { ...(data[id] ?? {}), ...patch }) });
 
@@ -133,7 +133,7 @@ test("the menu bar line adds used per-model limits and honours a display overrid
 });
 
 test("a cache written by another version is ignored", async () => {
-  const { filePersist } = await import("../src/settings.mjs");
+  const { filePersist } = await import("../src/core/settings.mjs");
   const file = `${process.env.TMPDIR ?? "/tmp"}/usage-pill-test-${Date.now()}.json`;
   filePersist(file, "1.0.0").save({ claude: { lastGood: { available: true } } });
   assert.deepEqual(Object.keys(filePersist(file, "1.0.0").load()), ["claude"], "same version is reused");
