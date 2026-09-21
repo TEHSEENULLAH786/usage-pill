@@ -188,6 +188,17 @@ async function paint() {
   appearance.append(h, appearancePicker());
   frag.append(appearance);
 
+  // Every figure here is read from somewhere else, and some are worked out
+  // rather than reported. Say so once, where it can't be missed.
+  if (view.length) {
+    const disclaimer = el(
+      "p",
+      "note disclaimer",
+      "These figures are read from each service, and some are worked out from what its API gives. They can lag or be rounded. Open the service's own page above for the exact number.",
+    );
+    frag.append(disclaimer);
+  }
+
   const footer = el("div", "footer");
   footer.append(el("span", "note", view.find((p) => p.updated)?.updated ?? ""));
   const actions = el("div");
@@ -216,8 +227,10 @@ async function paint() {
   frag.append(footer);
 
   if (seq !== renderSeq) return; // a newer render finished first
-  document.getElementById("detail").replaceChildren(frag);
-  requestAnimationFrame(() => window.pill.detailSize(document.body.scrollHeight));
+  const root = document.getElementById("detail");
+  root.replaceChildren(frag);
+  // 12px of margin plus 2px of border sit outside the panel's own box.
+  requestAnimationFrame(() => window.pill.detailSize(root.scrollHeight + 14));
 }
 
 async function optionField(providerId, o) {

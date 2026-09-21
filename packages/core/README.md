@@ -52,7 +52,10 @@ console.log(pillText(entries));
 | `claude`  | a Claude Code login on this machine      | current session and weekly limits, model    |
 | `claude:…`| a login copied when it was current       | the same, for another account                |
 | `ollama`  | `apiKey` setting or `OLLAMA_API_KEY`     | included usage in dollars, requests per model |
-| `chatgpt` | `adminKey` setting or `OPENAI_ADMIN_KEY` | API spend this month against a budget       |
+
+`chatgpt` is written but not shipped in `providers()`: it reports OpenAI API
+spend rather than the ChatGPT plan allowance the name suggests, and it has
+never been run against a live admin key. Import it by name to opt in.
 
 `providers()` is a function, not an array: Claude contributes one provider per
 account signed in to Claude Code on this machine (see `listClaudeAccounts()`).

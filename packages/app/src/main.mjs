@@ -23,6 +23,9 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const renderer = (file) => path.join(here, "renderer", file);
 const PRELOAD = path.join(here, "preload.cjs");
 const DETAIL_WIDTH = 360;
+// A popover, not a window: past this it scrolls rather than growing down the
+// screen. Still clamped to the display it sits on.
+const DETAIL_MAX_HEIGHT = 560;
 
 const settings = fileSettings();
 const hub = createHub({ providers, settings, persist: filePersist() });
@@ -429,7 +432,7 @@ function registerIpc() {
   ipcMain.on("detail:size", (_e, { height }) => {
     if (!detail || detail.isDestroyed()) return;
     const a = screen.getDisplayMatching(detail.getBounds()).workArea;
-    detail.setSize(DETAIL_WIDTH, Math.min(Math.ceil(height), a.height - 24));
+    detail.setSize(DETAIL_WIDTH, Math.min(Math.ceil(height), DETAIL_MAX_HEIGHT, a.height - 24));
     positionDetail();
   });
   ipcMain.on("detail:close", () => hideDetail());

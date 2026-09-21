@@ -11,9 +11,15 @@ export { chatgpt, ollama };
  * A function rather than an array because Claude contributes one provider per
  * account signed in to Claude Code on this machine. Pass it straight to
  * `createHub({ providers })`.
+ *
+ * `chatgpt` is deliberately not in this list. It reports OpenAI API spend,
+ * which is not the ChatGPT plan allowance people expect from the name, and it
+ * has never been checked against a live admin key. It is still exported, so
+ * `createHub({ providers: async () => [...await claudeProviders(), ollama, chatgpt] })`
+ * opts back in.
  */
 export async function providers() {
-  return [...(await claudeProviders()), ollama, chatgpt];
+  return [...(await claudeProviders()), ollama];
 }
 
 export { createHub, RateLimited } from "./hub.mjs";

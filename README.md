@@ -2,8 +2,8 @@
 
 A small pill that floats anywhere on your desktop, plus a menu bar item,
 showing how much of your AI plans you've used: Claude Code's session and
-weekly limits (every account you sign into), Ollama Cloud's month, OpenAI
-spend, and any provider you add.
+weekly limits (every account you sign into), Ollama Cloud's month, and any
+provider you add.
 
 ```
 claude  Fable 1M  session 25%  week 39%  ↻ 3h 18m  ·  ollama  month 6.2%  ↻ 9d
@@ -73,7 +73,6 @@ Settings → General → Login Items).
 |---|---|---|
 | Claude | a Claude Code login on this machine | yes |
 | Ollama | an API key from ollama.com → Settings → Keys | once a key is entered |
-| OpenAI | an admin key from platform.openai.com | once a key is entered |
 
 A provider that needs a key stays off until it has one, so a fresh install
 shows only Claude. Enter keys in the app's Settings, or with
@@ -88,9 +87,11 @@ stops updating when it expires; sign Claude Code into that account once to
 refresh it. `usage-pill-cli --accounts` lists them, `--forget <uuid>` drops
 one, and Settings has a Forget button.
 
-**OpenAI is API spend, not ChatGPT.** OpenAI publishes no endpoint for a
-ChatGPT plan's message allowance, so nothing can show it. What the provider
-reports is organization API spend this month, against a budget you set.
+**No ChatGPT chip yet.** The Usage page in ChatGPT's own settings is served
+to a logged-in browser session, not to the public API, so showing it needs an
+OpenAI login stored on the machine the way Claude Code stores one. An OpenAI
+API-spend provider exists in the source but is left out of the shipped list,
+because spend is not the plan allowance the name suggests.
 
 Adding another (Gemini, Cursor, a company dashboard…) is a single file in
 `packages/core/src/providers/` that returns a `Snapshot`; the pill, panel,
