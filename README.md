@@ -173,6 +173,8 @@ npm test
 ```
 
 ```
+assets/icon.png      the app icon, drawn by scripts/app-icon.mjs
+assets/trayTemplate* the menu bar icon, drawn by scripts/tray-icon.mjs
 src/main.mjs         Electron main process: windows, tray, IPC
 src/preload.cjs      the only bridge the windows get
 src/renderer/        pill, detail panel, settings window

@@ -11,6 +11,8 @@ files:
   - package.json
 mac:
   category: public.app-category.developer-tools
+  # Drawn by scripts/app-icon.mjs; electron-builder makes the .icns from it.
+  icon: assets/icon.png
   target:
     # Both Macs: arm64 for Apple Silicon, x64 for Intel. Each gets its own dmg.
     - target: dmg
