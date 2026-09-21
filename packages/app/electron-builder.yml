@@ -1,0 +1,24 @@
+appId: com.usagepill.app
+productName: Usage Pill
+directories:
+  output: dist
+files:
+  - src/**
+  - assets/**
+  - package.json
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - dmg
+    - zip
+  extendInfo:
+    LSUIElement: true            # menu bar app: no Dock icon
+    NSUserNotificationAlertStyle: alert
+  # Signing and notarization need an Apple Developer account. Until then:
+  # identity: null  (builds an unsigned app; Homebrew cask users can still
+  # install it, direct downloads see the Gatekeeper warning)
+  identity: null
+dmg:
+  contents:
+    - { x: 130, y: 220 }
+    - { x: 410, y: 220, type: link, path: /Applications }

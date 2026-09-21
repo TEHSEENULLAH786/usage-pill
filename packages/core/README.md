@@ -1,0 +1,88 @@
+# usage-pill-core
+
+Your AI plan usage as one small line: Claude Code's session and weekly limits,
+Ollama Cloud's monthly usage, and whatever provider you add next.
+
+```
+$ npx usage-pill-cli
+claude  Fable 1M  session 25%  week 39%  ↻ 3h 18m  ·  ollama  month 6.2%  ↻ 9d
+```
+
+The desktop pill and menu bar app that renders the same numbers is
+[`usage-pill`](https://www.npmjs.com/package/usage-pill).
+
+## CLI
+
+```
+usage-pill-cli                 print the pill
+usage-pill-cli --json          the same as JSON
+usage-pill-cli --refresh       skip the cache
+usage-pill-cli --watch 60      reprint every minute, notify when a used limit resets
+usage-pill-cli --provider claude
+usage-pill-cli --set ollama.apiKey=…
+usage-pill-cli --disable ollama
+```
+
+As a Claude Code status line, in `~/.claude/settings.json`:
+
+```json
+{ "statusLine": { "type": "command", "command": "usage-pill-cli --provider claude" } }
+```
+
+Numbers are cached in `~/.cache/usage-pill/cache.json` (3 min for Claude,
+5 min for Ollama) so a status line that runs often doesn't hit the services.
+
+## Library
+
+```js
+import { createHub, fileSettings, filePersist, providers, pillText } from "usage-pill-core";
+
+const hub = createHub({ providers, settings: fileSettings(), persist: filePersist() });
+const entries = await hub.getAll();        // [{ provider, snapshot }]
+console.log(pillText(entries));
+```
+
+## Providers
+
+| id       | needs                                   | reports                                    |
+|----------|-----------------------------------------|--------------------------------------------|
+| `claude` | a Claude Code login on this machine     | current session and weekly limits, model   |
+| `ollama` | `apiKey` setting or `OLLAMA_API_KEY`    | monthly included usage, requests per model |
+
+### Writing one
+
+A provider is a plain object. Return a `Snapshot`; the hub does caching,
+back-off and "last good values while stale" for you.
+
+```js
+export const chatgpt = {
+  id: "chatgpt",
+  label: "ChatGPT",
+  ttlMs: 5 * 60_000,
+  settings: [{ key: "apiKey", label: "API key", type: "password" }],
+  async fetch({ settings }) {
+    if (!settings.apiKey) return { available: false, reason: "Add an API key in Settings." };
+    const data = await fetchSomething(settings.apiKey);
+    return {
+      available: true,
+      badge: data.plan,
+      meters: [{ id: "month", label: "Monthly usage", short: "month", percent: data.percent, resetsAt: data.resetsAt, headline: true }],
+    };
+  },
+};
+```
+
+Throw `new RateLimited(message, retryAfterMs)` when the service says to slow
+down. `settings` fields drive the app's Settings window automatically;
+`options` (see the Claude provider's model picker) are choices the provider
+writes somewhere else. Types are in `index.d.ts`.
+
+## Where the numbers come from
+
+- Claude: `api.anthropic.com/api/oauth/usage`, the endpoint Claude Code itself
+  uses, called with the login in the macOS Keychain
+  (`~/.claude/.credentials.json` elsewhere). The first read may show a macOS
+  Keychain prompt. The token is used for that one request and never stored.
+- Ollama: `ollama.com/api/usage` with your API key.
+
+Both are undocumented by their owners and may change.
