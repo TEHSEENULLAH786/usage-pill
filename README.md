@@ -33,6 +33,22 @@ launch at login.
 Settings are one file shared by the app and the CLI:
 `~/.config/usage-pill/settings.json`.
 
+## Quit and uninstall
+
+The pill has no close button: it's a menu bar app. Quit it from the menu bar
+item (**Quit Usage Pill**) or from the Quit button in the detail panel.
+**Hide pill** keeps the menu bar item and removes the floating pill.
+
+Nothing is installed system-wide. To remove every trace:
+
+```sh
+rm -rf ~/.config/usage-pill ~/.cache/usage-pill   # settings and cache
+npm uninstall -g usage-pill usage-pill-core       # only if installed globally
+```
+
+If "Launch at login" was on, turn it off in the menu first (or under System
+Settings → General → Login Items).
+
 ## Providers
 
 Claude works with no setup, from the Claude Code login on this machine.

@@ -101,7 +101,10 @@ async function render(view) {
       busy = false;
     }
   });
-  actions.append(settingsBtn, refreshBtn);
+  const quitBtn = el("button", "btn", "Quit");
+  quitBtn.title = "Quit Usage Pill (also in the menu bar item's menu)";
+  quitBtn.addEventListener("click", () => window.pill.quit());
+  actions.append(quitBtn, settingsBtn, refreshBtn);
   footer.append(actions);
   root.append(footer);
 

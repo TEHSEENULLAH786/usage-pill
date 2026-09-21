@@ -16,6 +16,9 @@ npx usage-pill --detach   # and returns to the shell
 - The menu bar item shows the headline percentages and holds the menu:
   show/hide the pill, providers on/off, Settings, launch at login, quit.
 - A notification fires when a limit you'd used resets to 0%.
+- No close button on the pill: quit from the menu bar item or the Quit
+  button in the detail panel. Uninstall: `npm uninstall -g usage-pill` and
+  `rm -rf ~/.config/usage-pill ~/.cache/usage-pill`.
 
 Settings live in `~/.config/usage-pill/settings.json`, shared with the CLI.
 
