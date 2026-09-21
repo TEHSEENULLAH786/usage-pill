@@ -8,12 +8,15 @@
   "main": "src/main.mjs",
   "types": "./index.d.ts",
   "exports": {
-    ".": { "types": "./index.d.ts", "import": "./src/core/index.mjs" },
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./src/core/index.mjs"
+    },
     "./providers/*": "./src/core/providers/*.mjs"
   },
   "bin": {
-    "usage-pill": "./bin/usage-pill.mjs",
-    "usage-pill-cli": "./bin/usage-pill-cli.mjs"
+    "usage-pill": "bin/usage-pill.mjs",
+    "usage-pill-cli": "bin/usage-pill-cli.mjs"
   },
   "scripts": {
     "start": "electron .",
@@ -53,6 +56,6 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/TEHSEENULLAH786/usage-pill.git"
+    "url": "git+https://github.com/TEHSEENULLAH786/usage-pill.git"
   }
 }
