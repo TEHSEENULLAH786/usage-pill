@@ -15,7 +15,17 @@ Two packages, one codebase:
 | [`packages/core`](packages/core)     | `usage-pill-core` on npm: the providers, the hub, the CLI (`usage-pill-cli`) |
 | [`packages/app`](packages/app)       | `usage-pill` on npm: the Electron menu bar app with the floating pill |
 
-## Run it
+## Install
+
+- **Mac app:** download the `.dmg` from the [latest release](https://github.com/TEHSEENULLAH786/usage-pill/releases/latest)
+  and drag Usage Pill to Applications. It isn't notarized yet, so right-click
+  and choose Open on the first launch.
+- **From npm:** `npx usage-pill` runs the same app; `npx usage-pill-cli`
+  prints the numbers in a terminal.
+- **In Claude Code:** see [packages/core/README.md](packages/core/README.md#cli)
+  for the status line one-liner.
+
+## Run it from source
 
 ```sh
 npm install
