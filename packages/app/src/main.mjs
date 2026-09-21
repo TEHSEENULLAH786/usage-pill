@@ -305,7 +305,6 @@ function createTray() {
 function buildMenu() {
   const pillShown = !!pill && !pill.isDestroyed() && pill.isVisible();
   const all = hub.providers();
-  const p = appPrefs();
   return Menu.buildFromTemplate([
     ...entries.map((e) => ({ label: pillLine(e), enabled: false })),
     ...(entries.length ? [{ type: "separator" }] : []),
@@ -327,31 +326,8 @@ function buildMenu() {
     ...all
       .filter((x) => x.enabled && x.options.length)
       .flatMap((x) => x.options.map((o) => ({ label: `${x.label}: ${o.label}`, submenu: optionSubmenu(x.id, o.key) }))),
-    {
-      label: "Appearance",
-      submenu: [
-        ...[
-          ["system", "Match system"],
-          ["light", "Light"],
-          ["dark", "Dark"],
-        ].map(([value, label]) => ({
-          label,
-          type: "radio",
-          checked: p.theme === value,
-          click: () => setPrefs({ theme: value }),
-        })),
-        { type: "separator" },
-        ...[
-          ["text", "Numbers"],
-          ["ring", "Circles"],
-        ].map(([value, label]) => ({
-          label,
-          type: "radio",
-          checked: p.pillStyle === value,
-          click: () => setPrefs({ pillStyle: value }),
-        })),
-      ],
-    },
+    // Appearance is not repeated here: theme and pill style live in the
+    // panel under the pill, so there is one place to change them.
     { label: "Settings…", accelerator: "CmdOrCtrl+,", click: () => openPrefs() },
     {
       label: "Launch at login",

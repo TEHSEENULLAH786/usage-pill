@@ -14,10 +14,10 @@ npx usage-pill --detach   # and returns to the shell
 - Click it for the detail panel: bars, reset times, the Claude Code model
   picker, appearance, Ollama requests per model, Refresh, Settings, Quit.
 - Appearance: theme (match system / light / dark) and pill style (numbers,
-  or a circle per figure), in the panel's dropdown and the menu bar menu.
+  or a circle per figure), in the panel's own dropdown.
 - The menu bar item shows the headline percentages, plus a per-model weekly
   limit such as Fable once it has been used, and holds the menu: show/hide
-  the pill, providers on/off, appearance, Settings, launch at login, quit.
+  the pill, providers on/off, Settings, launch at login, quit.
 - A notification fires when a limit you'd used resets to 0%.
 - To quit: the × at the end of the pill, the Quit button in the panel, or
   the menu bar item. Uninstall: `npm uninstall -g usage-pill` and
