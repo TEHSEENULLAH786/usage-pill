@@ -3,9 +3,12 @@
   "version": "0.1.1",
   "description": "A draggable desktop pill and menu bar item showing your AI plan usage: Claude Code, Ollama Cloud, and more via providers",
   "license": "MIT",
+  "author": "Tehseen Ullah",
   "type": "module",
   "main": "src/main.mjs",
-  "bin": { "usage-pill": "./bin/usage-pill.mjs" },
+  "bin": {
+    "usage-pill": "./bin/usage-pill.mjs"
+  },
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --mac",
@@ -21,8 +24,26 @@
     "electron": "^44.4.3",
     "electron-builder": "^26.15.3"
   },
-  "files": ["src", "assets", "bin", "README.md"],
-  "engines": { "node": ">=20" },
-  "keywords": ["claude", "claude-code", "ollama", "usage", "menubar", "widget", "electron"],
-  "repository": { "type": "git", "url": "https://github.com/TEHSEENULLAH786/usage-pill.git" }
+  "files": [
+    "src",
+    "assets",
+    "bin",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ollama",
+    "usage",
+    "menubar",
+    "widget",
+    "electron"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TEHSEENULLAH786/usage-pill.git"
+  }
 }

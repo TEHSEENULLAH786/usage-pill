@@ -1,5 +1,6 @@
 appId: com.usagepill.app
 productName: Usage Pill
+electronVersion: 44.4.3
 directories:
   output: dist
 files:
