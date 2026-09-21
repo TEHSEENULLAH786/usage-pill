@@ -38,6 +38,11 @@ export function formatPercent(n) {
   return `${Number.isInteger(v) ? v : v.toFixed(1)}%`;
 }
 
+/** What a meter reads as: its own `display` when it has one, else the percentage. */
+export function meterText(meter) {
+  return meter?.display ?? formatPercent(meter?.percent);
+}
+
 /** "ok" | "warn" | "danger", from the percentage and the provider's own severity. */
 export function level(meter) {
   if (meter.percent >= 90 || meter.severity === "critical") return "danger";
@@ -52,6 +57,14 @@ export function headline(snapshot) {
   return (picked.length ? picked : meters).slice(0, 2);
 }
 
+/** Headline meters plus any the provider flagged for the menu bar, where a
+ *  per-model limit like Fable has room to appear. */
+export function trayMeters(snapshot) {
+  const top = headline(snapshot);
+  const extra = (snapshot?.meters ?? []).filter((m) => m.tray && !top.includes(m));
+  return [...top, ...extra];
+}
+
 /** "Just now" / "3 min ago" for a fetchedAt. */
 export function updatedLabel(fetchedAt, now = Date.now()) {
   if (!fetchedAt) return "";
@@ -61,11 +74,11 @@ export function updatedLabel(fetchedAt, now = Date.now()) {
 
 /** One provider as a line of text: "claude Fable 1M  session 25%  week 39%  ↻ 3h 18m". */
 export function pillLine({ provider, snapshot }, now = Date.now()) {
-  const parts = [provider.id];
+  const parts = [provider.short ?? provider.id];
   if (snapshot.badge) parts.push(snapshot.badge);
-  if (!snapshot.available) return `${parts.join(" ")}  unavailable`;
+  if (!snapshot.available) return `${parts.join("  ")}  unavailable`;
   const meters = headline(snapshot);
-  for (const m of meters) parts.push(`${m.short} ${formatPercent(m.percent)}`);
+  for (const m of meters) parts.push(`${m.short} ${meterText(m)}`);
   const reset = meters.find((m) => m.resetsAt)?.resetsAt;
   if (reset) parts.push(`↻ ${shortReset(reset, now)}`);
   return parts.join("  ");
@@ -76,9 +89,10 @@ export function pillText(entries, now = Date.now()) {
   return entries.map((e) => pillLine(e, now)).join("  ·  ");
 }
 
-/** Short enough for a menu bar: "25% 39% · 6.2%". */
+/** Short enough for a menu bar: "25% 39% 70% · 6.2%". Per-model limits that
+ *  have been used (Fable, Opus) are included; unavailable providers show "–". */
 export function trayTitle(entries) {
   return entries
-    .map(({ snapshot }) => (snapshot.available ? headline(snapshot).map((m) => formatPercent(m.percent)).join(" ") : "–"))
+    .map(({ snapshot }) => (snapshot.available ? trayMeters(snapshot).map(meterText).join(" ") : "–"))
     .join(" · ");
 }

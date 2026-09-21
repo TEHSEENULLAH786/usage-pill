@@ -1,4 +1,6 @@
-/* The admin console's tokens (client/src/styles.css), light and dark. */
+/* The admin console's tokens (client/src/styles.css).
+   Light is the base; dark applies when the OS says so and the app hasn't been
+   pinned to light, or when the app is pinned to dark. */
 :root {
   --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -17,7 +19,7 @@
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --color-primary: #7b8bff;
     --color-surface: #0b0b0c;
     --color-surface-light: #161618;
@@ -32,6 +34,21 @@
     --color-warning: #e3a13a;
     --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   }
+}
+:root[data-theme="dark"] {
+  --color-primary: #7b8bff;
+  --color-surface: #0b0b0c;
+  --color-surface-light: #161618;
+  --color-card: #111113;
+  --color-card-hover: #17171a;
+  --color-border: #232326;
+  --color-text-primary: #ececea;
+  --color-text-secondary: #a3a39e;
+  --color-text-muted: #6c6c67;
+  --color-success: #3fbf78;
+  --color-danger: #f0646a;
+  --color-warning: #e3a13a;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
 
 * { box-sizing: border-box; }
@@ -122,6 +139,48 @@ a { color: inherit; text-decoration: underline; }
 .chip .stale { color: var(--color-warning); font-size: 11px; margin-left: 2px; }
 .chip.empty { color: var(--color-text-muted); font-size: 11px; }
 
+/* Circles style: one ring per headline meter, percentage inside. */
+.chip.rings { align-items: center; gap: 8px; padding: 6px 10px; }
+.ring { position: relative; width: 28px; height: 28px; flex: none; }
+.ring svg { display: block; transform: rotate(-90deg); }
+.ring .track { stroke: var(--color-text-muted); opacity: 0.22; }
+.ring .value { stroke: var(--color-primary); transition: stroke-dashoffset 0.3s ease; }
+.ring .value.warn { stroke: var(--color-warning); }
+.ring .value.danger { stroke: var(--color-danger); }
+.ring .pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.ring .cap {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--color-text-muted);
+}
+.chip.rings .ring { margin-bottom: 9px; }
+
+/* The close button: quits everything, pill and menu bar item alike. */
+.chip.close {
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 28px;
+  color: var(--color-text-muted);
+  font-size: 15px;
+  line-height: 1;
+}
+.chip.close:hover { color: var(--color-card); background: var(--color-danger); border-color: var(--color-danger); }
+
 /* ---- detail panel ------------------------------------------------------- */
 #detail { margin: 6px; padding: 16px 18px; box-shadow: var(--shadow); }
 .section + .section { border-top: 1px solid var(--color-border); margin-top: 14px; padding-top: 14px; }
@@ -134,6 +193,57 @@ a { color: inherit; text-decoration: underline; }
 .warn-text { color: var(--color-warning); }
 .footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--color-border); margin-top: 10px; padding-top: 10px; }
 
+/* Appearance: a button that opens a light menu, whatever the theme, so the
+   choices stay legible while you switch between them. */
+.picker { position: relative; }
+.picker-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  font: inherit;
+  font-size: 12px;
+  color: var(--color-text-primary);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: default;
+  text-align: left;
+}
+.picker-btn:hover { background: var(--color-card-hover); }
+.picker-btn .caret { margin-left: auto; color: var(--color-text-muted); }
+.menu {
+  margin-top: 4px;
+  background: #ffffff;
+  color: #111112;
+  border: 1px solid #e2e2dd;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+.menu .group { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: #8b8b84; padding: 6px 8px 4px; }
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font: inherit;
+  font-size: 12px;
+  color: #111112;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 8px;
+  cursor: default;
+  text-align: left;
+}
+.menu-item:hover { background: #f0f0ec; }
+.menu-item .check { margin-left: auto; color: #2f4bff; visibility: hidden; }
+.menu-item[aria-checked="true"] { font-weight: 500; }
+.menu-item[aria-checked="true"] .check { visibility: visible; }
+.menu-item svg, .picker-btn svg { flex: none; }
+
 /* ---- settings ----------------------------------------------------------- */
 #settings { padding: 18px 20px 20px; background: var(--color-surface); min-height: 100vh; }
 .field { margin-bottom: 12px; }
@@ -144,3 +254,6 @@ a { color: inherit; text-decoration: underline; }
 .provider .head .title { font-size: 13px; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.account { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 0; }
+.account + .account { border-top: 1px solid var(--color-border); }
+.tag { font-family: var(--font-mono); font-size: 10px; color: var(--color-text-muted); }

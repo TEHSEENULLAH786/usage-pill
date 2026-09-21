@@ -1,13 +1,15 @@
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, Notification, screen, shell, Tray } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   createHub,
   filePersist,
   fileSettings,
-  formatPercent,
+  forgetClaudeAccount,
   headline,
   level,
+  listClaudeAccounts,
+  meterText,
   pillLine,
   providers,
   resetLabel,
@@ -31,27 +33,46 @@ const resets = watchResets({
 
 let pill = null;
 let detail = null;
-let prefs = null;
+let prefsWindow = null;
 let tray = null;
 let entries = [];
-let refreshTimer = null;
 
 if (!app.requestSingleInstanceLock()) app.quit();
 app.on("second-instance", () => showPill());
 if (process.platform === "darwin") app.dock?.hide();
 
 app.whenReady().then(async () => {
+  applyTheme();
   createTray();
-  if (settings.app().pillVisible !== false) createPill();
+  if (appPrefs().pillVisible !== false) createPill();
   registerIpc();
   await refresh();
-  refreshTimer = setInterval(() => refresh(), 60_000);
+  setInterval(() => refresh(), 60_000);
   setInterval(() => broadcast(), 30_000); // countdowns ("3h 6m") tick without a fetch
 });
 
 app.on("window-all-closed", () => {
   // A menu bar app stays alive with no windows.
 });
+
+// ---------------------------------------------------------------------------
+// Preferences
+
+/** What the windows need to know about appearance, with the defaults applied. */
+function appPrefs() {
+  const a = settings.app();
+  return {
+    theme: a.theme ?? "system", // "system" | "light" | "dark"
+    pillStyle: a.pillStyle ?? "text", // "text" | "ring"
+    pillVisible: a.pillVisible,
+  };
+}
+
+/** Electron paints window chrome and the default page background from this,
+ *  so it has to follow the app's own choice, not just the OS. */
+function applyTheme() {
+  nativeTheme.themeSource = appPrefs().theme;
+}
 
 // ---------------------------------------------------------------------------
 // Data
@@ -64,8 +85,8 @@ async function refresh(force = false) {
 }
 
 function broadcast() {
-  const view = viewModel(entries);
-  for (const w of [pill, detail]) if (w && !w.isDestroyed()) w.webContents.send("usage", view);
+  const payload = { view: viewModel(entries), prefs: appPrefs() };
+  for (const w of [pill, detail]) if (w && !w.isDestroyed()) w.webContents.send("usage", payload);
   tray?.setTitle(entries.length ? trayTitle(entries) : "", { fontType: "monospacedDigit" });
   tray?.setContextMenu(buildMenu());
 }
@@ -79,11 +100,18 @@ function viewModel(list, now = Date.now()) {
       const title = m.group ?? null;
       let g = groups.find((x) => x.title === title);
       if (!g) groups.push((g = { title, meters: [] }));
-      g.meters.push({ label: m.label, percent: formatPercent(m.percent), width: Math.min(100, Math.max(0, m.percent)), level: level(m), resetLabel: resetLabel(m.resetsAt, now) });
+      g.meters.push({
+        label: m.label,
+        value: meterText(m),
+        width: Math.min(100, Math.max(0, m.percent)),
+        level: level(m),
+        resetLabel: resetLabel(m.resetsAt, now),
+      });
     }
     return {
       id: provider.id,
       label: provider.label,
+      short: provider.short,
       homepage: provider.homepage,
       options: provider.options,
       available: snapshot.available,
@@ -94,7 +122,13 @@ function viewModel(list, now = Date.now()) {
       badge: snapshot.badge ?? null,
       account: snapshot.account ?? null,
       line: pillLine({ provider, snapshot }, now),
-      headline: top.map((m) => ({ short: m.short, percent: formatPercent(m.percent), width: Math.min(100, Math.max(0, m.percent)), level: level(m), title: `${m.label} · ${resetLabel(m.resetsAt, now)}` })),
+      headline: top.map((m) => ({
+        short: m.short,
+        value: meterText(m),
+        width: Math.min(100, Math.max(0, m.percent)),
+        level: level(m),
+        title: `${m.label} · ${resetLabel(m.resetsAt, now)}`,
+      })),
       reset: shortReset(top.find((m) => m.resetsAt)?.resetsAt, now),
       groups,
       rows: snapshot.rows ?? [],
@@ -236,13 +270,13 @@ function positionDetail() {
 }
 
 // ---------------------------------------------------------------------------
-// Settings window: which providers are on, their keys, app preferences.
+// Settings window: which providers are on, their keys, Claude accounts.
 
 function openPrefs() {
-  if (prefs && !prefs.isDestroyed()) return prefs.focus();
-  prefs = new BrowserWindow({
-    width: 440,
-    height: 560,
+  if (prefsWindow && !prefsWindow.isDestroyed()) return prefsWindow.focus();
+  prefsWindow = new BrowserWindow({
+    width: 460,
+    height: 640,
     title: "Usage Pill Settings",
     resizable: false,
     minimizable: false,
@@ -251,10 +285,10 @@ function openPrefs() {
     show: false,
     webPreferences: { preload: PRELOAD, contextIsolation: true, sandbox: true },
   });
-  prefs.setMenuBarVisibility(false);
-  prefs.loadFile(renderer("settings.html"));
-  prefs.once("ready-to-show", () => prefs.show());
-  prefs.on("closed", () => (prefs = null));
+  prefsWindow.setMenuBarVisibility(false);
+  prefsWindow.loadFile(renderer("settings.html"));
+  prefsWindow.once("ready-to-show", () => prefsWindow.show());
+  prefsWindow.on("closed", () => (prefsWindow = null));
 }
 
 // ---------------------------------------------------------------------------
@@ -271,6 +305,7 @@ function createTray() {
 function buildMenu() {
   const pillShown = !!pill && !pill.isDestroyed() && pill.isVisible();
   const all = hub.providers();
+  const p = appPrefs();
   return Menu.buildFromTemplate([
     ...entries.map((e) => ({ label: pillLine(e), enabled: false })),
     ...(entries.length ? [{ type: "separator" }] : []),
@@ -279,19 +314,44 @@ function buildMenu() {
     { type: "separator" },
     {
       label: "Providers",
-      submenu: all.map((p) => ({
-        label: p.label,
+      submenu: all.map((x) => ({
+        label: x.label,
         type: "checkbox",
-        checked: p.enabled,
+        checked: x.enabled,
         click: (item) => {
-          settings.set(p.id, { enabled: item.checked });
+          settings.set(x.id, { enabled: item.checked });
           refresh();
         },
       })),
     },
     ...all
-      .filter((p) => p.enabled && p.options.length)
-      .flatMap((p) => p.options.map((o) => ({ label: `${p.label}: ${o.label}`, submenu: optionSubmenu(p.id, o.key) }))),
+      .filter((x) => x.enabled && x.options.length)
+      .flatMap((x) => x.options.map((o) => ({ label: `${x.label}: ${o.label}`, submenu: optionSubmenu(x.id, o.key) }))),
+    {
+      label: "Appearance",
+      submenu: [
+        ...[
+          ["system", "Match system"],
+          ["light", "Light"],
+          ["dark", "Dark"],
+        ].map(([value, label]) => ({
+          label,
+          type: "radio",
+          checked: p.theme === value,
+          click: () => setPrefs({ theme: value }),
+        })),
+        { type: "separator" },
+        ...[
+          ["text", "Numbers"],
+          ["ring", "Circles"],
+        ].map(([value, label]) => ({
+          label,
+          type: "radio",
+          checked: p.pillStyle === value,
+          click: () => setPrefs({ pillStyle: value }),
+        })),
+      ],
+    },
     { label: "Settings…", accelerator: "CmdOrCtrl+,", click: () => openPrefs() },
     {
       label: "Launch at login",
@@ -302,6 +362,12 @@ function buildMenu() {
     { type: "separator" },
     { label: "Quit Usage Pill", accelerator: "CmdOrCtrl+Q", click: () => app.quit() },
   ]);
+}
+
+function setPrefs(patch) {
+  settings.setApp(patch);
+  applyTheme();
+  broadcast();
 }
 
 /** Built from the cached option values so the menu opens instantly; the
@@ -328,7 +394,14 @@ function optionSubmenu(id, key) {
 // IPC from the windows
 
 function registerIpc() {
-  ipcMain.handle("usage:get", async (_e, { refresh: force } = {}) => (force || !entries.length ? viewModel(await refresh(force)) : viewModel(entries)));
+  ipcMain.handle("usage:get", async (_e, { refresh: force } = {}) => ({
+    view: force || !entries.length ? viewModel(await refresh(force)) : viewModel(entries),
+    prefs: appPrefs(),
+  }));
+  ipcMain.handle("prefs:set", (_e, patch) => {
+    setPrefs(patch);
+    return appPrefs();
+  });
   ipcMain.on("pill:size", (_e, { width, height }) => {
     if (!pill || pill.isDestroyed()) return;
     const w = Math.max(80, Math.ceil(width));
@@ -357,12 +430,22 @@ function registerIpc() {
   ipcMain.handle("option:set", async (_e, { id, key, value }) => {
     await hub.setOption(id, key, value);
     optionCache.delete(`${id}:${key}`);
-    return viewModel(await refresh());
+    return { view: viewModel(await refresh()), prefs: appPrefs() };
+  });
+  // Tokens never leave the main process: the window sees names only.
+  ipcMain.handle("accounts:list", async () =>
+    (await listClaudeAccounts()).map(({ token, ...rest }) => rest),
+  );
+  ipcMain.handle("accounts:forget", async (_e, uuid) => {
+    await forgetClaudeAccount(uuid);
+    hub.invalidate();
+    await refresh(true);
+    return (await listClaudeAccounts()).map(({ token, ...rest }) => rest);
   });
   ipcMain.handle("settings:get", () => ({
     providers: hub.providers(),
     values: settings.read().providers ?? {},
-    app: { ...settings.app(), launchAtLogin: app.getLoginItemSettings().openAtLogin },
+    app: { ...appPrefs(), launchAtLogin: app.getLoginItemSettings().openAtLogin },
   }));
   ipcMain.handle("settings:save", async (_e, data) => {
     for (const [id, patch] of Object.entries(data.providers ?? {})) settings.set(id, patch);
@@ -370,14 +453,16 @@ function registerIpc() {
       const { launchAtLogin, ...rest } = data.app;
       if (typeof launchAtLogin === "boolean") app.setLoginItemSettings({ openAtLogin: launchAtLogin });
       settings.setApp(rest);
+      applyTheme();
       if (rest.pillVisible === false) hidePill();
       else if (rest.pillVisible === true) showPill();
     }
+    hub.invalidate(); // a new key must be tried at once, not after the cache expires
     await refresh(true);
     return true;
   });
   ipcMain.on("settings:open", () => openPrefs());
-  ipcMain.on("settings:close", () => prefs?.close());
+  ipcMain.on("settings:close", () => prefsWindow?.close());
   ipcMain.on("open-external", (_e, url) => {
     if (/^https?:\/\//.test(String(url))) shell.openExternal(url);
   });

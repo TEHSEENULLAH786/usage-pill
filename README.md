@@ -2,7 +2,8 @@
 
 A small pill that floats anywhere on your desktop, plus a menu bar item,
 showing how much of your AI plans you've used: Claude Code's session and
-weekly limits, Ollama Cloud's month, and any provider you add.
+weekly limits (every account you sign into), Ollama Cloud's month, OpenAI
+spend, and any provider you add.
 
 ```
 claude  Fable 1M  session 25%  week 39%  ↻ 3h 18m  ·  ollama  month 6.2%  ↻ 9d
@@ -36,18 +37,25 @@ npm test
 
 The pill drags anywhere and stays on top, across Spaces and over full-screen
 apps. Click it for the detail panel (bars, reset times, the Claude Code model
-picker, per-model Ollama requests). The menu bar item shows the headline
-percentages and has the menu: show/hide the pill, providers on/off, settings,
-launch at login.
+picker, appearance, per-model Ollama requests); the × on the pill quits
+everything. The menu bar item shows the headline percentages, including a
+per-model weekly limit such as Fable once it has been used, and holds the
+menu: show/hide the pill, providers on/off, appearance, settings, launch at
+login.
+
+**Appearance** lives in the panel's dropdown and the menu bar's Appearance
+menu: theme (match system / light / dark) and pill style (numbers, or a
+circle per figure).
 
 Settings are one file shared by the app and the CLI:
 `~/.config/usage-pill/settings.json`.
 
 ## Quit and uninstall
 
-The pill has no close button: it's a menu bar app. Quit it from the menu bar
-item (**Quit Usage Pill**) or from the Quit button in the detail panel.
-**Hide pill** keeps the menu bar item and removes the floating pill.
+Quit it from the **×** at the end of the pill, the **Quit** button in the
+detail panel, or the menu bar item (**Quit Usage Pill**). Any of the three
+closes the pill and the menu bar item together. **Hide pill** keeps the menu
+bar item and removes the floating pill.
 
 Nothing is installed system-wide. To remove every trace:
 
@@ -61,11 +69,30 @@ Settings → General → Login Items).
 
 ## Providers
 
-Claude works with no setup, from the Claude Code login on this machine.
-Ollama needs an API key from ollama.com → Settings → Keys, entered in the
-app's Settings or with `usage-pill-cli --set ollama.apiKey=…`.
+| provider | needs | on by default |
+|---|---|---|
+| Claude | a Claude Code login on this machine | yes |
+| Ollama | an API key from ollama.com → Settings → Keys | once a key is entered |
+| OpenAI | an admin key from platform.openai.com | once a key is entered |
 
-Adding one (ChatGPT, Gemini, Cursor…) is a single file in
+A provider that needs a key stays off until it has one, so a fresh install
+shows only Claude. Enter keys in the app's Settings, or with
+`usage-pill-cli --set ollama.apiKey=…`.
+
+**More than one Claude account.** Claude Code holds one login at a time.
+Each time it runs, Usage Pill copies that login — the token into the
+Keychain, the name into `~/.config/usage-pill/accounts.json` — so an account
+keeps its own chip after you sign Claude Code into a different one. Nothing
+here signs anybody in: every token was made by Claude Code itself. A copy
+stops updating when it expires; sign Claude Code into that account once to
+refresh it. `usage-pill-cli --accounts` lists them, `--forget <uuid>` drops
+one, and Settings has a Forget button.
+
+**OpenAI is API spend, not ChatGPT.** OpenAI publishes no endpoint for a
+ChatGPT plan's message allowance, so nothing can show it. What the provider
+reports is organization API spend this month, against a budget you set.
+
+Adding another (Gemini, Cursor, a company dashboard…) is a single file in
 `packages/core/src/providers/` that returns a `Snapshot`; the pill, panel,
 menu, settings form and CLI all render it without further code. See
 [packages/core/README.md](packages/core/README.md#writing-one).

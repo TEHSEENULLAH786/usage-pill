@@ -3,6 +3,8 @@ productName: Usage Pill
 electronVersion: 44.4.3
 directories:
   output: dist
+# Both dmgs sit side by side, so each says which Mac it is for.
+artifactName: ${productName}-${version}-${arch}.${ext}
 files:
   - src/**
   - assets/**
@@ -10,14 +12,21 @@ files:
 mac:
   category: public.app-category.developer-tools
   target:
-    - dmg
-    - zip
+    # Both Macs: arm64 for Apple Silicon, x64 for Intel. Each gets its own dmg.
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
   extendInfo:
     LSUIElement: true            # menu bar app: no Dock icon
     NSUserNotificationAlertStyle: alert
-  # Signing and notarization need an Apple Developer account. Until then:
-  # identity: null  (builds an unsigned app; Homebrew cask users can still
-  # install it, direct downloads see the Gatekeeper warning)
+  # Signing and notarization need an Apple Developer account. Until then this
+  # builds unsigned: Homebrew cask users can still install it, direct
+  # downloads need right-click → Open once.
   identity: null
 dmg:
   contents:

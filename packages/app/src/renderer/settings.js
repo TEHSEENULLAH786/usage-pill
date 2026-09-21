@@ -1,5 +1,5 @@
 // Settings: built from each provider's declared fields, so a new provider
-// gets its form for free. App preferences at the bottom.
+// gets its form for free. Claude accounts and app preferences below that.
 
 const form = document.getElementById("settings");
 
@@ -12,8 +12,7 @@ function el(tag, cls, text) {
 
 function field(label, input, help) {
   const box = el("div", "field");
-  const l = el("label", null, label);
-  box.append(l, input);
+  box.append(el("label", null, label), input);
   if (help) box.append(el("p", "help", help));
   return box;
 }
@@ -30,6 +29,7 @@ function check(label, checked, name) {
 
 async function render() {
   const { providers, values, app } = await window.pill.settings();
+  document.documentElement.dataset.theme = app.theme === "system" ? "" : app.theme ?? "";
   form.replaceChildren();
 
   const heading = el("p", "eyebrow", "Providers");
@@ -42,7 +42,9 @@ async function render() {
     const head = el("div", "head");
     head.append(el("span", "title", p.label), check("Show", p.enabled, `${p.id}.enabled`));
     box.append(head);
-    if (!p.settings.length) box.append(el("p", "help", "Nothing to configure."));
+    if (!p.settings.length) {
+      box.append(el("p", "help", p.id.startsWith("claude") ? "Uses the Claude Code login on this machine." : "Nothing to configure."));
+    }
     for (const f of p.settings) {
       const input = el("input");
       input.type = f.type ?? "text";
@@ -58,8 +60,45 @@ async function render() {
     form.append(box);
   }
 
+  // Claude accounts: one chip per account, kept by copying whatever login
+  // Claude Code holds. Nothing here can sign anybody in.
+  const accounts = await window.pill.accounts().catch(() => []);
+  if (accounts.length) {
+    const h = el("p", "eyebrow", "Claude accounts");
+    h.style.margin = "6px 0 12px";
+    form.append(h);
+    const box = el("div", "panel");
+    box.style.padding = "8px 14px";
+    for (const a of accounts) {
+      const row = el("div", "account");
+      const left = el("div");
+      left.append(el("div", null, a.email ?? a.name ?? a.uuid.slice(0, 8)));
+      left.append(el("div", "tag", a.current ? "signed in to Claude Code" : a.expired ? "copy expired" : "saved copy"));
+      row.append(left);
+      if (!a.current) {
+        const forget = el("button", "btn", "Forget");
+        forget.type = "button";
+        forget.addEventListener("click", async () => {
+          forget.disabled = true;
+          await window.pill.forgetAccount(a.uuid);
+          render();
+        });
+        row.append(forget);
+      }
+      box.append(row);
+    }
+    form.append(box);
+    form.append(
+      el(
+        "p",
+        "help",
+        "Sign Claude Code into another account and it appears here on the next refresh. A saved copy stops updating when its login expires; sign Claude Code into it once to refresh it.",
+      ),
+    );
+  }
+
   const appHeading = el("p", "eyebrow", "App");
-  appHeading.style.margin = "6px 0 12px";
+  appHeading.style.margin = "14px 0 12px";
   form.append(appHeading);
   const appBox = el("div", "panel");
   appBox.style.padding = "12px 14px";
@@ -67,6 +106,7 @@ async function render() {
   const login = check("Launch at login", app.launchAtLogin, "app.launchAtLogin");
   login.style.marginTop = "8px";
   appBox.append(login);
+  appBox.append(el("p", "help", "Theme and pill style are in the panel under the pill, and in the menu bar item's Appearance menu."));
   form.append(appBox);
 
   const actions = el("div", "actions");

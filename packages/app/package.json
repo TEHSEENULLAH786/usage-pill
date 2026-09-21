@@ -1,6 +1,6 @@
 {
   "name": "usage-pill",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A draggable desktop pill and menu bar item showing your AI plan usage: Claude Code, Ollama Cloud, and more via providers",
   "license": "MIT",
   "author": "Tehseen Ullah",
@@ -15,7 +15,7 @@
     "tray-icon": "node scripts/tray-icon.mjs"
   },
   "dependencies": {
-    "usage-pill-core": "^0.1.0"
+    "usage-pill-core": "^0.2.0"
   },
   "peerDependencies": {
     "electron": ">=33"

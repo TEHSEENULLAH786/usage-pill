@@ -1,6 +1,6 @@
 {
   "name": "usage-pill-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Read AI plan usage (Claude Code, Ollama Cloud, more via providers) as one small pill of text or JSON",
   "license": "MIT",
   "type": "module",

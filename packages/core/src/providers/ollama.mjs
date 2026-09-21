@@ -8,6 +8,10 @@ export const ollama = {
   label: "Ollama",
   homepage: "https://ollama.com/settings",
   ttlMs: 5 * 60_000,
+  // Off until there is a key to use: most people don't have an Ollama Cloud
+  // account, and an unconfigured chip is just noise. Anyone who has entered a
+  // key keeps it on without having to tick anything.
+  enabledByDefault: (settings) => !!(settings.apiKey || process.env.OLLAMA_API_KEY),
   settings: [
     { key: "apiKey", label: "API key", type: "password", placeholder: "OLLAMA_API_KEY", help: "From ollama.com → Settings → Keys. Stays on this machine." },
     { key: "resetDay", label: "Usage resets on day", type: "number", min: 1, max: 28, placeholder: "1", help: "ollama.com doesn't report the reset date; check it on ollama.com/settings." },

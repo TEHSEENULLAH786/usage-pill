@@ -18,9 +18,12 @@ usage-pill-cli                 print the pill
 usage-pill-cli --json          the same as JSON
 usage-pill-cli --refresh       skip the cache
 usage-pill-cli --watch 60      reprint every minute, notify when a used limit resets
+usage-pill-cli --tray          the short menu bar form (25% 44% 70%)
 usage-pill-cli --provider claude
 usage-pill-cli --set ollama.apiKey=…
 usage-pill-cli --disable ollama
+usage-pill-cli --accounts      Claude accounts known on this machine
+usage-pill-cli --forget <uuid> drop a saved Claude account
 ```
 
 As a Claude Code status line, in `~/.claude/settings.json`:
@@ -44,10 +47,20 @@ console.log(pillText(entries));
 
 ## Providers
 
-| id       | needs                                   | reports                                    |
-|----------|-----------------------------------------|--------------------------------------------|
-| `claude` | a Claude Code login on this machine     | current session and weekly limits, model   |
-| `ollama` | `apiKey` setting or `OLLAMA_API_KEY`    | monthly included usage, requests per model |
+| id        | needs                                    | reports                                     |
+|-----------|------------------------------------------|---------------------------------------------|
+| `claude`  | a Claude Code login on this machine      | current session and weekly limits, model    |
+| `claude:…`| a login copied when it was current       | the same, for another account                |
+| `ollama`  | `apiKey` setting or `OLLAMA_API_KEY`     | monthly included usage, requests per model  |
+| `chatgpt` | `adminKey` setting or `OPENAI_ADMIN_KEY` | API spend this month against a budget       |
+
+`providers()` is a function, not an array: Claude contributes one provider per
+account signed in to Claude Code on this machine (see `listClaudeAccounts()`).
+Pass it straight to `createHub({ providers })`, which re-resolves it on every
+read so an account added later simply appears.
+
+A provider may set `enabledByDefault` to stay off until it is configured;
+`ollama` and `chatgpt` both wait for a key.
 
 ### Writing one
 

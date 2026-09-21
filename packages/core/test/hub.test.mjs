@@ -77,3 +77,57 @@ test("pill and tray text", () => {
   assert.equal(trayTitle(entries), "25% 39% · 6.2% · –");
   assert.equal(shortReset("2026-09-21T10:42:00Z", now), "42m");
 });
+
+test("a provider that needs configuring stays off until it has it", async () => {
+  const needsKey = fake(async () => ({ available: true, meters: [] }), {
+    id: "keyed",
+    label: "Keyed",
+    enabledByDefault: (s) => !!s.apiKey,
+  });
+  const off = createHub({ providers: [needsKey], settings: memSettings() });
+  assert.deepEqual((await off.getAll()).map((e) => e.provider.id), []);
+
+  const configured = createHub({ providers: [needsKey], settings: memSettings({ keyed: { apiKey: "x" } }) });
+  assert.deepEqual((await configured.getAll()).map((e) => e.provider.id), ["keyed"]);
+
+  // An explicit tick always wins over the default, both ways.
+  const forcedOn = createHub({ providers: [needsKey], settings: memSettings({ keyed: { enabled: true } }) });
+  assert.deepEqual((await forcedOn.getAll()).map((e) => e.provider.id), ["keyed"]);
+  const forcedOff = createHub({ providers: [needsKey], settings: memSettings({ keyed: { apiKey: "x", enabled: false } }) });
+  assert.deepEqual((await forcedOff.getAll()).map((e) => e.provider.id), []);
+});
+
+test("providers can be a function, for one Claude provider per account", async () => {
+  let accounts = ["claude"];
+  const hub = createHub({
+    providers: async () => accounts.map((id) => fake(async () => ({ available: true, meters: [] }), { id, label: id })),
+    settings: memSettings(),
+  });
+  assert.deepEqual((await hub.getAll()).map((e) => e.provider.id), ["claude"]);
+  accounts = ["claude", "claude:9f2a"];
+  assert.deepEqual((await hub.getAll()).map((e) => e.provider.id), ["claude", "claude:9f2a"]);
+  assert.deepEqual(hub.providers().map((p) => p.id), ["claude", "claude:9f2a"]);
+});
+
+test("the menu bar line adds used per-model limits and honours a display override", () => {
+  const entries = [
+    {
+      provider: { id: "claude", short: "claude" },
+      snapshot: {
+        available: true,
+        meters: [
+          { id: "session", short: "session", label: "Current session", percent: 25, headline: true },
+          { id: "w", short: "week", label: "All models", percent: 44, headline: true },
+          { id: "fable", short: "fable", label: "Fable", percent: 70, tray: true },
+          { id: "opus", short: "opus", label: "Opus", percent: 0 },
+        ],
+      },
+    },
+    {
+      provider: { id: "chatgpt", short: "chatgpt" },
+      snapshot: { available: true, meters: [{ id: "month", short: "month", label: "Spend", percent: 0, display: "$12.34", headline: true }] },
+    },
+  ];
+  assert.equal(trayTitle(entries), "25% 44% 70% · $12.34");
+  assert.equal(pillText(entries, Date.now()), "claude  session 25%  week 44%  ·  chatgpt  month $12.34");
+});
