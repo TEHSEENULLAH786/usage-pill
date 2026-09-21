@@ -106,7 +106,7 @@ async function render() {
   const login = check("Launch at login", app.launchAtLogin, "app.launchAtLogin");
   login.style.marginTop = "8px";
   appBox.append(login);
-  appBox.append(el("p", "help", "Theme and pill style are in the panel under the pill: click the pill, then Appearance."));
+  appBox.append(el("p", "help", "Theme and pill style are in the panel under the pill, and in the menu bar item's Appearance menu."));
   form.append(appBox);
 
   const actions = el("div", "actions");

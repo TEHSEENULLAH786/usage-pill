@@ -40,10 +40,12 @@ apps. Click it for the detail panel (bars, reset times, the Claude Code model
 picker, appearance, per-model Ollama requests); the × on the pill quits
 everything. The menu bar item shows the headline percentages, including a
 per-model weekly limit such as Fable once it has been used, and holds the
-menu: show/hide the pill, providers on/off, settings, launch at login.
+menu: show/hide the pill, providers on/off, appearance, settings, launch at
+login.
 
-**Appearance** is in the panel, under its own dropdown: theme (match system /
-light / dark) and pill style (numbers, or a circle per figure).
+**Appearance** lives in the panel's dropdown and the menu bar's Appearance
+menu: theme (match system / light / dark) and pill style (numbers, or a
+circle per figure).
 
 Settings are one file shared by the app and the CLI:
 `~/.config/usage-pill/settings.json`.
