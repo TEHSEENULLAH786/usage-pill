@@ -14,8 +14,9 @@ claude  Opus 1M  session 16%  week 45%  ↻ 34m  ·  ollama  pro  month $4.20  �
 - **Mac app:** download the `.dmg` for your Mac from the
   [latest release](https://github.com/TEHSEENULLAH786/usage-pill/releases/latest)
   (`arm64` for Apple Silicon, `x64` for Intel) and drag Usage Pill to
-  Applications. It isn't notarized yet, so right-click and choose Open on the
-  first launch.
+  Applications. It isn't notarized, so macOS blocks the first launch:
+  right-click it and choose Open, or open it once and then click **Open
+  Anyway** under System Settings → Privacy & Security.
 - **With Node:** `npx usage-pill` runs the same app. For the terminal command,
   `npx -p usage-pill usage-pill-cli` — `npx usage-pill-cli` on its own looks
   for a package by that name and won't find one, because the command lives
@@ -213,9 +214,13 @@ npm publish                   # optional: the npx route
 replaces the installers. It refuses while commits are unpushed, since the
 release would point at code nobody else has.
 
-The dmg is unsigned until you add an Apple Developer identity to
-`electron-builder.yml`; unsigned builds open with right-click → Open, or
-through a Homebrew cask.
+Each build is ad-hoc signed by `scripts/adhoc-sign.cjs`, which runs as
+electron-builder's `afterPack` hook. Without it the bundle keeps the signature
+Electron shipped with, our files break it, and macOS calls the download
+*damaged and can't be opened* rather than merely unverified. Ad-hoc signing
+doesn't make it trusted, only internally consistent, so a download still needs
+allowing once. Removing the prompt altogether means a Developer ID and
+notarization, which need a paid Apple Developer account.
 
 ## How it reads the numbers
 

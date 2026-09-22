@@ -3,6 +3,8 @@ productName: Usage Pill
 electronVersion: 44.4.3
 directories:
   output: dist
+# Re-signs each bundle before the dmg is made; see the script for why.
+afterPack: scripts/adhoc-sign.cjs
 # Both dmgs sit side by side, so each says which Mac it is for.
 artifactName: ${productName}-${version}-${arch}.${ext}
 files:
@@ -26,9 +28,9 @@ mac:
   extendInfo:
     LSUIElement: true            # menu bar app: no Dock icon
     NSUserNotificationAlertStyle: alert
-  # Signing and notarization need an Apple Developer account. Until then this
-  # builds unsigned: Homebrew cask users can still install it, direct
-  # downloads need right-click → Open once.
+  # No Developer ID, so electron-builder does no signing of its own and the
+  # afterPack hook applies an ad-hoc signature instead. A download still needs
+  # allowing once under Privacy & Security; notarizing needs a paid account.
   identity: null
 dmg:
   contents:
