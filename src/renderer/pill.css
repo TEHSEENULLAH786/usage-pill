@@ -209,7 +209,18 @@ a { color: inherit; text-decoration: underline; }
 .meter .sub { font-size: 11px; color: var(--color-text-muted); margin-top: 4px; }
 .note { font-size: 11px; line-height: 1.5; color: var(--color-text-muted); margin-top: 6px; }
 .warn-text { color: var(--color-warning); }
-.footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--color-border); margin-top: 10px; padding-top: 10px; }
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-border);
+  margin-top: 10px;
+  padding-top: 10px;
+}
+.footer .note { margin-top: 0; white-space: nowrap; }
+.footer .btn { padding: 4px 9px; white-space: nowrap; }
 .disclaimer { border-top: 1px solid var(--color-border); margin-top: 14px; padding-top: 10px; }
 
 /* Appearance: a button that opens a light menu, whatever the theme, so the

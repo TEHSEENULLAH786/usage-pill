@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, nativeImage, nativeTheme, Notificati
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  claudeModel,
   createHub,
   filePersist,
   fileSettings,
@@ -14,6 +15,7 @@ import {
   providers,
   resetLabel,
   shortReset,
+  trayMeters,
   trayTitle,
   updatedLabel,
   watchResets,
@@ -57,6 +59,10 @@ if (process.platform === "darwin") {
 
 app.whenReady().then(async () => {
   applyTheme();
+  if (!settings.app().loginItemDecided) {
+    app.setLoginItemSettings({ openAtLogin: true });
+    settings.setApp({ loginItemDecided: true });
+  }
   createTray();
   if (appPrefs().pillVisible !== false) createPill();
   registerIpc();
@@ -108,7 +114,9 @@ function broadcast() {
 /** Everything the windows render, already formatted: they hold no logic. */
 function viewModel(list, now = Date.now()) {
   return list.map(({ provider, snapshot }) => {
-    const top = headline(snapshot);
+    // Not just the two headline figures: a per-model weekly limit that has
+    // been used (Fable, Opus) earns its place in the pill as well.
+    const top = trayMeters(snapshot);
     const groups = [];
     for (const m of snapshot.meters ?? []) {
       const title = m.group ?? null;
@@ -134,7 +142,9 @@ function viewModel(list, now = Date.now()) {
       stale: !!snapshot.stale,
       staleReason: snapshot.staleReason ?? null,
       updated: updatedLabel(snapshot.fetchedAt, now),
-      badge: snapshot.badge ?? null,
+      // Claude Code's model can change between two cached snapshots, so for
+      // the account it belongs to it is read now rather than taken from one.
+      badge: provider.account?.current ? claudeModel()?.short ?? null : snapshot.badge ?? null,
       account: snapshot.account ?? null,
       line: pillLine({ provider, snapshot }, now),
       headline: top.map((m) => ({

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createHub, RateLimited, pillText, trayTitle, shortReset } from "../src/core/index.mjs";
+import { createHub, RateLimited, pillText, trayTitle, trayMeters, shortReset } from "../src/core/index.mjs";
 
 const memSettings = (data = {}) => ({ get: (id) => data[id] ?? {}, set: (id, patch) => (data[id] = { ...(data[id] ?? {}), ...patch }) });
 
@@ -73,9 +73,12 @@ test("pill and tray text", () => {
     { provider: { id: "ollama", label: "Ollama" }, snapshot: { available: true, meters: [{ id: "m", label: "Monthly usage", short: "month", percent: 6.2, headline: true, resetsAt: "2026-10-01T00:00:00Z" }] } },
     { provider: { id: "gpt", label: "ChatGPT" }, snapshot: { available: false, reason: "no key" } },
   ];
-  assert.equal(pillText(entries, now), "claude  Fable 1M  session 25%  week 39%  ↻ 3h 18m  ·  ollama  month 6.2%  ↻ 10d  ·  gpt  unavailable");
+  assert.equal(pillText(entries, now), "claude  Fable 1M  session 25%  week 39%  ↻ 3h 18m  ·  ollama  month 6.2%  ↻ Oct 1  ·  gpt  unavailable");
   assert.equal(trayTitle(entries), "25% 39% · 6.2% · –");
-  assert.equal(shortReset("2026-09-21T10:42:00Z", now), "42m");
+  assert.equal(shortReset("2026-09-21T10:42:00Z", now), "42m", "within the hour, minutes");
+  // The rendered time follows the machine's timezone, so assert the shape.
+  assert.match(shortReset("2026-09-23T15:59:00Z", now), /^Wed \d{1,2}:\d{2}\s?(AM|PM)$/, "a few days out, the day it lands");
+  assert.equal(shortReset("2026-10-07T00:00:00Z", now), "Oct 7", "further out, the date");
 });
 
 test("a provider that needs configuring stays off until it has it", async () => {
@@ -130,6 +133,11 @@ test("the menu bar line adds used per-model limits and honours a display overrid
   ];
   assert.equal(trayTitle(entries), "25% 44% 70% · $12.34");
   assert.equal(pillText(entries, Date.now()), "claude  session 25%  week 44%  ·  chatgpt  month $12.34");
+  // The pill shows tray-flagged meters too, so Fable rides along there as well.
+  assert.deepEqual(
+    trayMeters(entries[0].snapshot).map((m) => m.short),
+    ["session", "week", "fable"],
+  );
 });
 
 test("a cache written by another version is ignored", async () => {

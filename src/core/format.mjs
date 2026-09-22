@@ -1,10 +1,13 @@
 const HOUR = 3600_000;
 const DAY = 24 * HOUR;
 
-/** "3h 18m" within a day, "42m" within an hour, else "9d". */
+/** "42m", "3h 18m", "Fri 3:59 AM", "Oct 7" — the nearest useful form.
+ *  A day away is a countdown; a few days away is the day and time it lands,
+ *  which says more than "2d"; further out, just the date. */
 export function shortReset(iso, now = Date.now()) {
   if (!iso) return "";
-  const ms = Date.parse(iso) - now;
+  const at = new Date(iso);
+  const ms = at.getTime() - now;
   if (Number.isNaN(ms)) return "";
   if (ms <= 0) return "now";
   if (ms < DAY) {
@@ -12,7 +15,10 @@ export function shortReset(iso, now = Date.now()) {
     const m = Math.floor((ms % HOUR) / 60_000);
     return h ? `${h}h ${m}m` : `${m}m`;
   }
-  return `${Math.ceil(ms / DAY)}d`;
+  if (ms < 7 * DAY) {
+    return `${at.toLocaleDateString(undefined, { weekday: "short" })} ${at.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+  }
+  return at.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 /** "Resets in 4 hr 2 min" within a day, otherwise "Resets Fri 4:00 AM" or "Resets Oct 1". */
