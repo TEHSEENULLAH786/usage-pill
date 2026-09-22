@@ -37,6 +37,11 @@ if (has("--help") || has("-h")) {
   usage-pill-cli --forget <uuid> drop a saved Claude account
   usage-pill-cli --config        print the settings file path
 
+This command ships inside the usage-pill package. Run it once with
+  npx -p usage-pill usage-pill-cli
+or install it so it is on your PATH:
+  npm install -g usage-pill
+
 Claude needs no key: it reads the Claude Code login on this machine, and keeps
 a copy of each account you sign Claude Code into so they all stay visible.
 Settings live in ~/.config/usage-pill/settings.json (also used by the app).

@@ -16,8 +16,10 @@ claude  Opus 1M  session 16%  week 45%  ↻ 34m  ·  ollama  pro  month $4.20  �
   (`arm64` for Apple Silicon, `x64` for Intel) and drag Usage Pill to
   Applications. It isn't notarized yet, so right-click and choose Open on the
   first launch.
-- **With Node:** `npx usage-pill` runs the same app, `npx usage-pill-cli`
-  prints the numbers in a terminal.
+- **With Node:** `npx usage-pill` runs the same app. For the terminal command,
+  `npx -p usage-pill usage-pill-cli` — `npx usage-pill-cli` on its own looks
+  for a package by that name and won't find one, because the command lives
+  inside `usage-pill`.
 
 Claude needs no setup beyond being signed in to Claude Code on that Mac.
 macOS asks once to allow reading that login from the Keychain.
@@ -56,6 +58,14 @@ it off first, or remove it under System Settings → General → Login Items.
 
 ## The CLI
 
+Both commands come from the one package. Run it once with
+`npx -p usage-pill usage-pill-cli`, or install it so the command is simply on
+your PATH:
+
+```sh
+npm install -g usage-pill
+```
+
 ```
 usage-pill-cli                 print the pill
 usage-pill-cli --json          the same as JSON
@@ -69,7 +79,9 @@ usage-pill-cli --accounts      Claude accounts known on this machine
 usage-pill-cli --forget <uuid> drop a saved Claude account
 ```
 
-As a Claude Code status line, in `~/.claude/settings.json`:
+As a Claude Code status line, in `~/.claude/settings.json`. This one needs the
+global install above: a status line runs on every render, which is far too
+often to go through npx.
 
 ```json
 { "statusLine": { "type": "command", "command": "usage-pill-cli --provider claude" } }
