@@ -42,7 +42,18 @@ let entries = [];
 
 if (!app.requestSingleInstanceLock()) app.quit();
 app.on("second-instance", () => showPill());
-if (process.platform === "darwin") app.dock?.hide();
+// A menu bar app owns no Dock slot. Run from npm there is no .app bundle
+// either, so anything that does show an icon — the Dock in the moment before
+// this hides it — would borrow Electron's. Point it at ours first.
+if (process.platform === "darwin") {
+  try {
+    const icon = nativeImage.createFromPath(path.join(here, "..", "assets", "icon.png"));
+    if (!icon.isEmpty()) app.dock?.setIcon(icon);
+  } catch {
+    // Only the icon: not worth failing a launch over.
+  }
+  app.dock?.hide();
+}
 
 app.whenReady().then(async () => {
   applyTheme();
