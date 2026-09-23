@@ -286,16 +286,32 @@ function hideDetail() {
   if (detail && !detail.isDestroyed()) detail.hide();
 }
 
-/** Right-aligned under the pill, kept inside the pill's display. */
+/** Right-aligned under the pill, kept inside the pill's display — and never
+ *  over the pill itself: both float at the same level, so a panel that covered
+ *  the pill would take away the only thing that closes it again. Under, over,
+ *  or beside, in that order. */
 function positionDetail() {
   if (!detail || detail.isDestroyed() || !pill || pill.isDestroyed()) return;
+  const gap = 6;
   const p = pill.getBounds();
   const d = detail.getBounds();
   const a = screen.getDisplayMatching(p).workArea;
+  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), Math.max(lo, hi));
   let x = p.x + p.width - d.width;
-  let y = p.y + p.height + 6;
-  if (y + d.height > a.y + a.height) y = Math.max(a.y, p.y - d.height - 6);
-  x = Math.min(Math.max(x, a.x), a.x + a.width - d.width);
+  let y;
+  if (p.y + p.height + gap + d.height <= a.y + a.height) {
+    y = p.y + p.height + gap; // under the pill, the usual case
+  } else if (p.y - gap - d.height >= a.y) {
+    y = p.y - d.height - gap; // over it, when the room is above instead
+  } else {
+    // A tall pill — the card column — can leave too little either way. Then it
+    // goes alongside, on whichever side has the room, top edges roughly level.
+    y = clamp(p.y, a.y, a.y + a.height - d.height);
+    const left = p.x - d.width - gap;
+    const right = p.x + p.width + gap;
+    x = left >= a.x || right + d.width > a.x + a.width ? left : right;
+  }
+  x = clamp(x, a.x, a.x + a.width - d.width);
   detail.setPosition(Math.round(x), Math.round(y));
 }
 
