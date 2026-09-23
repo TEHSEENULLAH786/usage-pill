@@ -17,6 +17,33 @@ function field(label, input, help) {
   return box;
 }
 
+// The same choices the panel's dropdown and the menu bar's Appearance menu
+// offer, spelled out here as well so the whole of the app is settable in one
+// place. The values are what `app.theme` / `app.pillStyle` are stored as.
+const THEMES = [
+  ["system", "Match system"],
+  ["light", "Light"],
+  ["dark", "Dark"],
+];
+const STYLES = [
+  ["text", "Numbers"],
+  ["ring", "Circles"],
+  ["card", "Card"],
+  ["mini", "Small card"],
+];
+
+function select(name, options, current) {
+  const box = el("select");
+  box.name = name;
+  for (const [value, label] of options) {
+    const opt = el("option", null, label);
+    opt.value = value;
+    if (value === current) opt.selected = true;
+    box.append(opt);
+  }
+  return box;
+}
+
 function check(label, checked, name) {
   const wrap = el("label", "check");
   const input = el("input");
@@ -106,7 +133,12 @@ async function render() {
   const login = check("Launch at login", app.launchAtLogin, "app.launchAtLogin");
   login.style.marginTop = "8px";
   appBox.append(login);
-  appBox.append(el("p", "help", "Theme and pill style are in the panel under the pill, and in the menu bar item's Appearance menu."));
+
+  const layout = field("Pill layout", select("app.pillStyle", STYLES, app.pillStyle), "Numbers and Circles are one strip; Card is a column of rectangles, one per provider; Small card is the short name and the percentages alone.");
+  layout.style.margin = "14px 0 12px";
+  appBox.append(layout);
+  appBox.append(field("Theme", select("app.theme", THEMES, app.theme)));
+  appBox.append(el("p", "help", "Both are also in the panel under the pill and in the menu bar item's Appearance menu."));
   form.append(appBox);
 
   const actions = el("div", "actions");
@@ -122,7 +154,7 @@ async function render() {
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const data = { providers: {}, app: {} };
-  for (const input of form.querySelectorAll("input[name]")) {
+  for (const input of form.querySelectorAll("input[name], select[name]")) {
     const [scope, key] = input.name.split(".");
     const value = input.type === "checkbox" ? input.checked : input.type === "number" ? (input.value === "" ? null : Number(input.value)) : input.value;
     if (scope === "app") data.app[key] = value;

@@ -149,10 +149,14 @@ function viewModel(list, now = Date.now()) {
       line: pillLine({ provider, snapshot }, now),
       headline: top.map((m) => ({
         short: m.short,
+        // The card styles have the room to spell the meter out and to show
+        // when it comes back, so both are carried alongside the short form.
+        label: m.label,
         value: meterText(m),
         total: m.total ?? null,
         width: Math.min(100, Math.max(0, m.percent)),
         level: level(m),
+        reset: shortReset(m.resetsAt, now),
         title: `${m.label} · ${resetLabel(m.resetsAt, now)}`,
       })),
       reset: shortReset(top.find((m) => m.resetsAt)?.resetsAt, now),
@@ -375,6 +379,8 @@ function buildMenu() {
         ...[
           ["text", "Numbers"],
           ["ring", "Circles"],
+          ["card", "Card"],
+          ["mini", "Small card"],
         ].map(([value, label]) => ({
           label,
           type: "radio",
@@ -439,7 +445,13 @@ function registerIpc() {
     const h = Math.max(24, Math.ceil(height));
     const b = pill.getBounds();
     if (b.width === w && b.height === h) return;
-    pill.setBounds({ x: b.x + b.width - w, y: b.y, width: w, height: h }); // grow leftwards, keep the right edge
+    // Grow leftwards, keeping the right edge. The card style is a column tall
+    // enough to run off the bottom from where a strip sat happily, so the top
+    // gives way instead — the pill stays whole and on the screen it was on.
+    const a = screen.getDisplayMatching(b).workArea;
+    const x = b.x + b.width - w;
+    const y = Math.max(a.y, Math.min(b.y, a.y + a.height - h));
+    pill.setBounds({ x, y, width: w, height: h });
     savePillBounds();
   });
   ipcMain.handle("pill:bounds", () => (pill && !pill.isDestroyed() ? pill.getBounds() : null));
@@ -483,8 +495,9 @@ function registerIpc() {
     if (data.app) {
       const { launchAtLogin, ...rest } = data.app;
       if (typeof launchAtLogin === "boolean") app.setLoginItemSettings({ openAtLogin: launchAtLogin });
-      settings.setApp(rest);
-      applyTheme();
+      // setPrefs, not setApp: a layout or theme picked here should land on the
+      // pill as the dialog closes, not after the refresh below has answered.
+      setPrefs(rest);
       if (rest.pillVisible === false) hidePill();
       else if (rest.pillVisible === true) showPill();
     }

@@ -22,6 +22,8 @@ function icon(name, size = 14) {
     display: ["M3 5h18v11H3z", "M8 20h8M12 16v4"],
     numbers: ["M4 7h6M4 12h10M4 17h7", "M17 7h3M17 12h3M17 17h3"],
     circle: ["M12 3a9 9 0 109 9", "M12 7a5 5 0 105 5"],
+    card: ["M3 4h18v16H3z", "M6 9h12M6 13h8M6 17h5"],
+    mini: ["M4 8h16v8H4z", "M7 12h4"],
     check: ["M4 12.5 9 17.5 20 6.5"],
   };
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -46,19 +48,45 @@ const THEMES = [
   { value: "light", label: "Light", icon: "sun" },
   { value: "dark", label: "Dark", icon: "moon" },
 ];
+// `short` is what fits in a quarter of the panel's width; `label` is the name
+// the menu bar and Settings use for the same thing.
 const STYLES = [
-  { value: "text", label: "Numbers", icon: "numbers" },
-  { value: "ring", label: "Circles", icon: "circle" },
+  { value: "text", label: "Numbers", short: "Numbers", icon: "numbers" },
+  { value: "ring", label: "Circles", short: "Circles", icon: "circle" },
+  { value: "card", label: "Card", short: "Card", icon: "card" },
+  { value: "mini", label: "Small card", short: "Small", icon: "mini" },
 ];
+
+/** The layouts laid out flat: switching is one click, not a click to open a
+ *  menu and another to choose. The theme, changed far less often, keeps the
+ *  dropdown. */
+function layoutBar() {
+  const bar = el("div", "seg");
+  for (const s of STYLES) {
+    const btn = el("button", "seg-btn");
+    btn.type = "button";
+    btn.setAttribute("aria-checked", String(s.value === prefs.pillStyle));
+    btn.title = `Pill layout: ${s.label}`;
+    btn.append(icon(s.icon, 13), el("span", null, s.short));
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      picker = null;
+      prefs = await window.pill.setPrefs({ pillStyle: s.value });
+      applyTheme();
+      paint();
+    });
+    bar.append(btn);
+  }
+  return bar;
+}
 
 function appearancePicker() {
   const box = el("div", "picker");
   const theme = THEMES.find((t) => t.value === prefs.theme) ?? THEMES[0];
-  const style = STYLES.find((s) => s.value === prefs.pillStyle) ?? STYLES[0];
 
   const btn = el("button", "picker-btn");
   btn.type = "button";
-  btn.append(icon(theme.icon), el("span", null, theme.label), el("span", "muted", "·"), icon(style.icon), el("span", null, style.label));
+  btn.append(icon(theme.icon), el("span", null, theme.label));
   btn.append(el("span", "caret", "▾"));
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -70,7 +98,7 @@ function appearancePicker() {
   if (picker === "appearance") {
     const menu = el("div", "menu");
     const add = (group, items, current, key) => {
-      menu.append(el("div", "group", group));
+      if (group) menu.append(el("div", "group", group));
       for (const it of items) {
         const item = el("button", "menu-item");
         item.type = "button";
@@ -89,8 +117,8 @@ function appearancePicker() {
         menu.append(item);
       }
     };
-    add("Theme", THEMES, prefs.theme, "theme");
-    add("Pill style", STYLES, prefs.pillStyle, "pillStyle");
+    // Only the theme is behind the button now; the layouts are the row below.
+    add(null, THEMES, prefs.theme, "theme");
     box.append(menu);
   }
   return box;
@@ -185,7 +213,7 @@ async function paint() {
   const appearance = el("div", "section");
   const h = el("p", "eyebrow", "Appearance");
   h.style.margin = "0 0 6px";
-  appearance.append(h, appearancePicker());
+  appearance.append(h, appearancePicker(), layoutBar());
   frag.append(appearance);
 
   // Every figure here is read from somewhere else, and some are worked out

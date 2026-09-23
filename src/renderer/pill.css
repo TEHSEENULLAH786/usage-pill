@@ -169,6 +169,115 @@ a { color: inherit; text-decoration: underline; }
 }
 .chip.rings .ring { margin-bottom: 9px; }
 
+/* Card style: a rectangle per provider, read top to bottom — name and model,
+   then one labelled bar per headline meter with the time it comes back. */
+.chip.card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  width: 200px;
+  padding: 9px 11px 10px;
+  position: relative; /* the top card holds quit in its corner */
+}
+.card-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
+/* Quit sits in the top card's own corner. The header keeps clear of it, so a
+   long model badge never ends up underneath. */
+.card-x {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  padding: 0;
+  cursor: default;
+}
+.card-x:hover { color: var(--color-card); background: var(--color-danger); }
+.chip.card.has-close .card-head { padding-right: 18px; }
+.card-head .label {
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-head .badge { margin-left: auto; flex: none; color: var(--color-text-secondary); }
+.card-meter + .card-meter { margin-top: 8px; }
+.card-meter-head { display: flex; align-items: baseline; gap: 6px; }
+/* The label gives way first: a reset can read "Fri 3:59 AM", and the
+   percentage and the time it comes back both have to survive that. */
+.card-meter-head .mlabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-meter-head .v { flex: none; margin-left: auto; }
+.card-meter-head .mreset {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.card-meter .bar-track { height: 5px; border-radius: 3px; margin-top: 5px; }
+.card-note { font-size: 11px; color: var(--color-text-muted); }
+
+/* Small card: the same shape with the labels and bars taken away. */
+.chip.mini { flex-direction: column; align-items: stretch; gap: 4px; padding: 7px 10px; min-width: 96px; }
+.mini-head { display: flex; align-items: baseline; gap: 6px; }
+.mini-head .badge { margin-left: auto; color: var(--color-text-secondary); }
+.mini-vals { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.mini-vals .v { font-size: 13px; }
+
+/* Cards stack their own content, so the strip stops stretching its children.
+   Full cards are a column — side by side, three providers run half a screen
+   wide — which puts the close button in the corner above them, where a widget
+   keeps it. Small cards stay a row: that is the point of them. */
+#pill[data-style="card"] { flex-direction: column; align-items: stretch; }
+#pill[data-style="card"] .chip.close { order: -1; align-self: flex-end; }
+#pill[data-style="mini"] { align-items: flex-start; }
+#pill[data-style="card"] .chip.close, #pill[data-style="mini"] .chip.close { height: 28px; }
+
+/* Layouts, flat in the panel: one click to switch, no menu to open first. */
+.seg { display: flex; gap: 4px; margin-top: 6px; }
+.seg-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 6px 4px;
+  cursor: default;
+  white-space: nowrap;
+}
+.seg-btn:hover { background: var(--color-card-hover); color: var(--color-text-primary); }
+.seg-btn[aria-checked="true"] {
+  color: var(--color-card);
+  background: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+}
+.seg-btn svg { flex: none; }
+
 /* The close button: quits everything, pill and menu bar item alike. */
 .chip.close {
   align-items: center;
