@@ -25,7 +25,8 @@
     "dist": "node scripts/with-env.mjs electron-builder --config electron-builder.config.cjs --mac",
     "release": "node scripts/release.mjs",
     "tray-icon": "node scripts/tray-icon.mjs",
-    "app-icon": "node scripts/app-icon.mjs"
+    "app-icon": "node scripts/app-icon.mjs",
+    "dist:test": "SKIP_NOTARIZE=1 node scripts/with-env.mjs electron-builder --config electron-builder.config.cjs --mac --dir --arm64"
   },
   "peerDependencies": {
     "electron": ">=33"

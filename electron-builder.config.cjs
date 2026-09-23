@@ -29,12 +29,19 @@ function hasDeveloperId() {
   }
 }
 
+// Notarizing only matters for a download. A build you install yourself is
+// never quarantined, so SKIP_NOTARIZE trades twenty minutes for a quick test.
 const notarizeCredentials =
-  !!process.env.APPLE_ID && !!process.env.APPLE_APP_SPECIFIC_PASSWORD && !!process.env.APPLE_TEAM_ID;
+  !process.env.SKIP_NOTARIZE &&
+  !!process.env.APPLE_ID &&
+  !!process.env.APPLE_APP_SPECIFIC_PASSWORD &&
+  !!process.env.APPLE_TEAM_ID;
 const signed = hasDeveloperId();
 
 if (!signed) {
   console.log("  • no Developer ID certificate: the app will be ad-hoc signed");
+} else if (process.env.SKIP_NOTARIZE) {
+  console.log("  • signing with Developer ID, not notarizing (SKIP_NOTARIZE) — for local testing only");
 } else if (!notarizeCredentials) {
   console.log("  • signing with Developer ID, but not notarizing: no APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID");
 } else {
