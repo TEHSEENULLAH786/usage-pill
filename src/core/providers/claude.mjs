@@ -1,5 +1,5 @@
 import { accountLabel, claudeAccountToken, listClaudeAccounts } from "../claude-accounts.mjs";
-import { claudeModel, claudeModelOptions, setClaudeModel } from "../claude-code.mjs";
+import { claudeModel } from "../claude-code.mjs";
 import { RateLimited } from "../hub.mjs";
 
 /**
@@ -24,20 +24,9 @@ export function claudeProvider(account, { alone }) {
     ttlMs: 3 * 60_000,
     account: { uuid: account.uuid, email: account.email, name: account.name, current, expired: account.expired },
     settings: [],
-    // Claude Code's model is a machine-wide setting, so it belongs to the
-    // account Claude Code is actually signed in as.
-    options: current
-      ? [
-          {
-            key: "model",
-            label: "Claude Code model",
-            help: "Applies to Claude Code sessions started after the change.",
-            values: () => claudeModelOptions(),
-            current: () => claudeModel()?.id ?? null,
-            set: (value) => setClaudeModel(value),
-          },
-        ]
-      : [],
+    // The model Claude Code runs is reported here (the badge) but not set from
+    // here: it is a machine-wide setting, and Claude Code itself owns it.
+    options: [],
 
     async fetch() {
       const token = await claudeAccountToken(account);

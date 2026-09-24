@@ -41,6 +41,7 @@ let detail = null;
 let prefsWindow = null;
 let tray = null;
 let entries = [];
+let detailHiddenAt = 0; // when the panel last went away on its own, see below
 
 if (!app.requestSingleInstanceLock()) app.quit();
 app.on("second-instance", () => showPill());
@@ -83,7 +84,7 @@ function appPrefs() {
   const a = settings.app();
   return {
     theme: a.theme ?? "system", // "system" | "light" | "dark"
-    pillStyle: a.pillStyle ?? "text", // "text" | "ring"
+    pillStyle: a.pillStyle ?? "card", // "card" | "mini" | "text" | "ring"
     pillVisible: a.pillVisible,
   };
 }
@@ -176,8 +177,8 @@ function createPill() {
   if (pill && !pill.isDestroyed()) return pill;
   const saved = settings.app().pill ?? {};
   pill = new BrowserWindow({
-    width: saved.width ?? 520,
-    height: saved.height ?? 44,
+    width: saved.width ?? 208,
+    height: saved.height ?? 140,
     ...startPosition(saved),
     frame: false,
     transparent: true,
@@ -217,7 +218,7 @@ function startPosition(saved) {
     if (onScreen) return { x: saved.x, y: saved.y };
   }
   const a = screen.getPrimaryDisplay().workArea;
-  return { x: a.x + a.width - (saved.width ?? 520) - 16, y: a.y + 12 };
+  return { x: a.x + a.width - (saved.width ?? 208) - 16, y: a.y + 12 };
 }
 
 function savePillBounds() {
@@ -264,13 +265,20 @@ function createDetail() {
   detail.setAlwaysOnTop(true, "floating");
   detail.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   detail.loadFile(renderer("detail.html"));
-  detail.on("blur", () => detail?.hide());
+  // Blur hides it — including the blur that clicking the pill causes, which
+  // lands before the click does. When it came from that, the pill's own click
+  // must not turn round and open it again.
+  detail.on("blur", () => {
+    if (detail?.isVisible()) detailHiddenAt = Date.now();
+    detail?.hide();
+  });
   detail.on("closed", () => (detail = null));
   return detail;
 }
 
 function toggleDetail() {
   if (detail && !detail.isDestroyed() && detail.isVisible()) return hideDetail();
+  if (Date.now() - detailHiddenAt < 300) return; // that click meant "close"
   createDetail();
   const show = () => {
     positionDetail();

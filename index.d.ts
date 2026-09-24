@@ -185,8 +185,6 @@ export function claudeAccountToken(account: ClaudeAccount): Promise<string | nul
 export function forgetClaudeAccount(uuid: string): Promise<boolean>;
 export function accountLabel(account: { email?: string | null; name?: string | null; uuid: string }): string;
 export function claudeModel(): { id: string; label: string; longContext: boolean; short: string } | null;
-export function claudeModelOptions(): OptionValue[];
-export function setClaudeModel(value: string | null): ReturnType<typeof claudeModel>;
 
 export function shortReset(iso: string | null | undefined, now?: number): string;
 export function resetLabel(iso: string | null | undefined, now?: number): string;

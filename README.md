@@ -28,21 +28,20 @@ macOS asks once to allow reading that login from the Keychain.
 ## Using it
 
 The pill drags anywhere and stays on top, across Spaces and over full-screen
-apps. Click it for the detail panel: bars, reset times, the Claude Code model
-picker, the layout switcher, appearance, per-model Ollama requests, and Quit.
-The **×** — at the end of the pill, or in the top card's corner in the Card
-layout — quits everything.
+apps. Click it for the detail panel: bars, reset times, the layout switcher,
+appearance, per-model Ollama requests, and Quit. Click the pill again, or press
+Escape, to close the panel. The **×** — at the end of the pill, or in the top
+card's corner in the Card layout — quits everything.
 
 The menu bar item shows the headline percentages, plus a per-model weekly
 limit such as Fable once it has been used, and holds the menu: show/hide the
-pill, providers on/off, the Claude Code model, Appearance, Settings, launch at
-login, quit.
+pill, providers on/off, Appearance, Settings, launch at login, quit.
 
 **Appearance**, in Settings, in the panel's dropdown and in the menu bar's
-Appearance menu: theme (match system, light, dark) and pill layout — numbers,
-a circle per figure, a card (a column of rectangles, one per provider, each
-limit a labelled bar with the time it resets), or a small card (the short name
-and the percentages alone).
+Appearance menu: theme (match system, light, dark) and pill layout — a card
+(the default: a column of rectangles, one per provider, each limit a labelled
+bar with the time it resets), a small card (the short name and the percentages
+alone), numbers, or a circle per figure.
 
 Settings live in `~/.config/usage-pill/settings.json`, shared with the CLI.
 
@@ -161,9 +160,9 @@ export const gemini = {
 ```
 
 Throw `new RateLimited(message, retryAfterMs)` when the service says to slow
-down. `settings` fields build the app's Settings form automatically; `options`
-(see the Claude provider's model picker) are choices the provider writes
-somewhere else. Types are in `index.d.ts`.
+down. `settings` fields build the app's Settings form automatically; `options` are
+choices the provider writes somewhere else, offered in the panel and the menu
+bar. Types are in `index.d.ts`.
 
 ## As a library
 

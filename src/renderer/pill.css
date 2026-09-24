@@ -300,16 +300,9 @@ a { color: inherit; text-decoration: underline; }
   max-height: calc(100vh - 12px);
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none; /* it still scrolls; it just draws no bar down the edge */
 }
-#detail::-webkit-scrollbar { width: 9px; }
-#detail::-webkit-scrollbar-track { background: transparent; }
-#detail::-webkit-scrollbar-thumb {
-  background: var(--color-text-muted);
-  opacity: 0.4;
-  border: 3px solid transparent;
-  border-radius: 6px;
-  background-clip: content-box;
-}
+#detail::-webkit-scrollbar { display: none; }
 .section + .section { border-top: 1px solid var(--color-border); margin-top: 14px; padding-top: 14px; }
 .row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .title { font-size: 13px; font-weight: 500; }

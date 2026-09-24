@@ -1,11 +1,11 @@
 // The panel under the pill: one section per provider with its bars, rows and
-// provider options (the Claude Code model picker), an appearance picker, and
+// any options the provider declares, the layout switcher and theme picker, and
 // Refresh / Settings / Quit.
 
 let busy = false;
 let renderSeq = 0; // renders are async; only the latest one gets to paint
 let picker = null; // which dropdown is open, so a re-render can keep it open
-let prefs = { theme: "system", pillStyle: "text" };
+let prefs = { theme: "system", pillStyle: "card" };
 
 function el(tag, cls, text) {
   const n = document.createElement(tag);

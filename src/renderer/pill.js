@@ -3,7 +3,7 @@
 // to fit, and turns mouse gestures into "drag" or "open the panel".
 
 const root = document.getElementById("pill");
-let style = "text";
+let style = "card"; // the default layout, until the first payload says otherwise
 
 function el(tag, cls, text) {
   const n = document.createElement(tag);
@@ -117,7 +117,7 @@ function mini(p) {
 }
 
 function render({ view, prefs }) {
-  style = prefs?.pillStyle ?? "text";
+  style = prefs?.pillStyle ?? "card";
   document.documentElement.dataset.theme = prefs?.theme === "system" ? "" : prefs?.theme ?? "";
   root.dataset.style = style; // the card styles lay the strip out differently
 

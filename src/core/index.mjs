@@ -26,7 +26,7 @@ export { createHub, RateLimited } from "./hub.mjs";
 export { fileSettings, filePersist, defaultSettingsPath, defaultCachePath } from "./settings.mjs";
 export { watchResets } from "./notify.mjs";
 export { readClaudeCredentials } from "./credentials.mjs";
-export { claudeModel, claudeModelOptions, setClaudeModel } from "./claude-code.mjs";
+export { claudeModel } from "./claude-code.mjs";
 export {
   accountLabel,
   claudeAccountToken,
