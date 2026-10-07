@@ -486,6 +486,7 @@ function registerIpc() {
   });
   ipcMain.on("pill:moved", () => savePillBounds());
   ipcMain.on("pill:toggle-detail", () => toggleDetail());
+  ipcMain.on("pill:hide", () => hidePill());
   ipcMain.on("detail:size", (_e, { height }) => {
     if (!detail || detail.isDestroyed()) return;
     const a = screen.getDisplayMatching(detail.getBounds()).workArea;

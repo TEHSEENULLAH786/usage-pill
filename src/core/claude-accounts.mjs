@@ -63,8 +63,11 @@ const keychain = (args) =>
 const tokenOf = (uuid) => keychain(["find-generic-password", "-s", SERVICE, "-a", uuid, "-w"]);
 
 async function saveToken(uuid, token) {
-  // -U updates the item when it already exists.
-  await keychain(["add-generic-password", "-s", SERVICE, "-a", uuid, "-w", token, "-U", "-T", ""]);
+  // Delete then add, rather than `-U`: updating an existing item rewrites its
+  // access list, and macOS asks for the login password to allow that. Without
+  // `-T` the item trusts `security` itself, so later reads don't prompt either.
+  await keychain(["delete-generic-password", "-s", SERVICE, "-a", uuid]);
+  await keychain(["add-generic-password", "-s", SERVICE, "-a", uuid, "-w", token]);
 }
 
 /**

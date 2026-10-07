@@ -31,7 +31,8 @@ The pill drags anywhere and stays on top, across Spaces and over full-screen
 apps. Click it for the detail panel: bars, reset times, the layout switcher,
 appearance, per-model Ollama requests, and Quit. Click the pill again, or press
 Escape, to close the panel. The **×** — at the end of the pill, or in the top
-card's corner in the Card layout — quits everything.
+card's corner in the Card layout — hides the pill. The menu bar item keeps
+showing the numbers; **Show pill** in its menu brings the pill back.
 
 The menu bar item shows the headline percentages, plus a per-model weekly
 limit such as Fable once it has been used, and holds the menu: show/hide the
@@ -47,9 +48,9 @@ Settings live in `~/.config/usage-pill/settings.json`, shared with the CLI.
 
 ### Quit and uninstall
 
-Quit from the **×** on the pill, the **Quit** button in the panel, or the menu
-bar item. Any of the three closes the pill and the menu bar item together.
-**Hide pill** keeps the menu bar item and removes the floating pill.
+Quit from the **Quit** button in the panel or the menu bar item. Either one
+closes the pill and the menu bar item together. The **×** on the pill and
+**Hide pill** in the menu only remove the floating pill; the menu bar item stays.
 
 ```sh
 rm -rf ~/.config/usage-pill ~/.cache/usage-pill   # settings and cache

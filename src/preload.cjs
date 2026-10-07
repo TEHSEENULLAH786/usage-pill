@@ -25,5 +25,6 @@ contextBridge.exposeInMainWorld("pill", {
   openSettings: () => ipcRenderer.send("settings:open"),
   closeSettings: () => ipcRenderer.send("settings:close"),
   openExternal: (url) => ipcRenderer.send("open-external", url),
+  hide: () => ipcRenderer.send("pill:hide"),
   quit: () => ipcRenderer.send("app:quit"),
 });

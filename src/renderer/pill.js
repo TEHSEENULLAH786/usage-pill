@@ -65,15 +65,19 @@ function bar(meter) {
 
 /** The card: the provider named in full, then one rectangle per headline
  *  meter. Everything the pill knows, laid out to be read rather than glanced. */
+// The pill is only one view: the menu bar item shows the same numbers, so ×
+// puts the pill away and leaves the app running. Quit lives in that menu.
+const HIDE_TITLE = "Hide the pill (the menu bar item stays; Show pill brings it back)";
+
 function card(p, withClose) {
   const chip = el("div", "chip panel card");
-  // A column of cards is a widget, so the quit control belongs in its top
+  // A column of cards is a widget, so the hide control belongs in its top
   // corner rather than standing off on its own above it.
   if (withClose) {
     const x = el("button", "card-x", "×");
     x.type = "button";
-    x.title = "Quit Usage Pill (closes the pill and the menu bar item)";
-    x.dataset.action = "quit";
+    x.title = HIDE_TITLE;
+    x.dataset.action = "hide";
     chip.append(x);
     chip.classList.add("has-close");
   }
@@ -126,7 +130,7 @@ function render({ view, prefs }) {
     root.append(el("div", "chip panel empty", "No providers enabled. Right-click the menu bar item to add one."));
   }
 
-  // The card column carries quit in the top card's corner; every other layout
+  // The card column carries hide in the top card's corner; every other layout
   // is a row, where a chip of its own is the only place it can go.
   const inlineClose = style === "card" && view.length > 0;
 
@@ -167,8 +171,8 @@ function render({ view, prefs }) {
 
   if (!inlineClose) {
     const close = el("div", "chip panel close", "×");
-    close.title = "Quit Usage Pill (closes the pill and the menu bar item)";
-    close.dataset.action = "quit";
+    close.title = HIDE_TITLE;
+    close.dataset.action = "hide";
     root.append(close);
   }
 
@@ -183,10 +187,10 @@ function render({ view, prefs }) {
 let drag = null;
 root.addEventListener("mousedown", async (e) => {
   if (e.button !== 0) return;
-  const quit = e.target.closest('[data-action="quit"]');
+  const hide = e.target.closest('[data-action="hide"]');
   const b = await window.pill.bounds();
   if (!b) return;
-  drag = { offX: e.screenX - b.x, offY: e.screenY - b.y, startX: e.screenX, startY: e.screenY, moved: false, quit: !!quit };
+  drag = { offX: e.screenX - b.x, offY: e.screenY - b.y, startX: e.screenX, startY: e.screenY, moved: false, hide: !!hide };
 });
 window.addEventListener("mousemove", (e) => {
   if (!drag) return;
@@ -196,10 +200,10 @@ window.addEventListener("mousemove", (e) => {
 });
 window.addEventListener("mouseup", () => {
   if (!drag) return;
-  const { moved, quit } = drag;
+  const { moved, hide } = drag;
   drag = null;
   if (moved) return window.pill.moved();
-  if (quit) return window.pill.quit();
+  if (hide) return window.pill.hide();
   window.pill.toggleDetail();
 });
 window.addEventListener("keydown", (e) => {
